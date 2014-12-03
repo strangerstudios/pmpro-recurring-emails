@@ -3,7 +3,7 @@
 Plugin Name: PMPro Recurring Emails
 Plugin URI: http://www.paidmembershipspro.com/wp/pmpro-recurring-emails/
 Description: Sends out an email 7 days before a recurring payment is made to remind members.
-Version: .1
+Version: .2
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -18,8 +18,15 @@ Author URI: http://www.strangerstudios.com
 //run our cron at the same time as the expiration warning emails
 add_action("pmpro_cron_expiration_warnings", "pmpro_recurring_emails", 30);
 
-//if(!empty($_REQUEST['test']))
-//	add_action('init', 'pmpro_recurring_emails');
+function init_test()
+{
+	if(!empty($_REQUEST['test']))
+	{
+		pmpro_recurring_emails();
+		exit;
+	}
+}
+add_action('init', 'init_test');
 
 /*
 	New expiration email function.
@@ -30,7 +37,7 @@ function pmpro_recurring_emails()
 {
 	global $wpdb;
 	
-	//make sure we only run once a day
+	//get todays date for later calculations
 	$today = date("Y-m-d 00:00:00", current_time("timestamp"));
 	
 	/*
@@ -128,10 +135,10 @@ function pmpro_recurring_emails()
 					$pmproemail->body = file_get_contents(dirname(__FILE__) . "/email/membership_recurring.html");
 										
 					//send the email
-					$pmproemail->sendEmail();
+					//$pmproemail->sendEmail();
 										
-					//notify script
-					printf(__("Membership renewing email sent to %s. ", "pmpro"), $euser->user_email);
+					//notify script					
+					printf(__("Membership renewing email sent to %s.<br />", "pmpro"), $euser->user_email);
 					
 					//remember so we don't send twice
 					$sent_emails[] = $euser->ID;
@@ -144,7 +151,13 @@ function pmpro_recurring_emails()
 			}
 				
 			//update user meta so we don't email them again
-			//update_user_meta($e->user_id, "pmpro_recurring_notice_" . $days, $today);
+			foreach($emails as $d)
+			{
+				if(intval($d) >= intval($days))
+				{					
+					update_user_meta($e->user_id, "pmpro_recurring_notice_" . $d, date("Y-m-d 00:00:00", strtotime("+" . (intval($d)+1) . " Days", strtotime($today))));
+				}
+			}
 		}
 	}
 }
