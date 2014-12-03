@@ -18,16 +18,6 @@ Author URI: http://www.strangerstudios.com
 //run our cron at the same time as the expiration warning emails
 add_action("pmpro_cron_expiration_warnings", "pmpro_recurring_emails", 30);
 
-function init_test()
-{
-	if(!empty($_REQUEST['test']))
-	{
-		pmpro_recurring_emails();
-		exit;
-	}
-}
-add_action('init', 'init_test');
-
 /*
 	New expiration email function.
 	Set the $emails array to include the days you want to send warning emails.
