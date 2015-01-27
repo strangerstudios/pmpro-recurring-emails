@@ -3,7 +3,7 @@
 Plugin Name: PMPro Recurring Emails
 Plugin URI: http://www.paidmembershipspro.com/wp/pmpro-recurring-emails/
 Description: Sends out an email 7 days before a recurring payment is made to remind members.
-Version: .2
+Version: .2.1
 Author: Stranger Studios
 Author URI: http://www.strangerstudios.com
 */
@@ -125,7 +125,7 @@ function pmpro_recurring_emails()
 					$pmproemail->body = file_get_contents(dirname(__FILE__) . "/email/membership_recurring.html");
 										
 					//send the email
-					//$pmproemail->sendEmail();
+					$pmproemail->sendEmail();
 										
 					//notify script					
 					printf(__("Membership renewing email sent to %s.<br />", "pmpro"), $euser->user_email);

@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: pmpro, paid memberships pro, files, uploads, downloads, secure, protect, lock
 Requires at least: 3.5
 Tested up to: 4.0.1
-Stable tag: .2
+Stable tag: .2.1
 
 Sends out an email 7 days before a recurring payment is made to remind members.
 
@@ -27,6 +27,9 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+
+= .2.1 =
+* Uncommented line that actually sends the email.
 
 = .2 =
 * Fixed user meta keeping track to prevent duplicate emails.
