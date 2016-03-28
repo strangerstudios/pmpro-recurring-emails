@@ -33,7 +33,7 @@ function pmpro_recurring_emails()
 	/*
 		Here is where you set how many emails you want to send and how early.
 	*/
-	$emails = array(7);		//<--- !!! UPDATE THIS LINE TO CHANGE WHEN EMAILS GO OUT !!! -->
+	$emails = apply_filters('pmpro_recurring_payment_reminder_day', array(7));		//<--- !!! UPDATE THIS LINE TO CHANGE WHEN EMAILS GO OUT !!! -->
 	sort($emails, SORT_NUMERIC);
 	
 	//array to store ids of folks we sent emails to so we don't email them twice
