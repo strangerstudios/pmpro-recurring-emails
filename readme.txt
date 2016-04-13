@@ -3,7 +3,7 @@ Contributors: strangerstudios
 Tags: pmpro, paid memberships pro, files, uploads, downloads, secure, protect, lock
 Requires at least: 3.5
 Tested up to: 4.5
-Stable tag: .3
+Stable tag: .3-beta
 
 Sends out an email 7 days before a recurring payment is made to remind members.
 
@@ -28,7 +28,7 @@ Please visit our premium support site at http://www.paidmembershipspro.com for m
 
 == Changelog ==
 
-= .3 =
+= .3-beta =
 FIX: Would sometimes send reminder to all users, regardless of time until next payment.
 FIX: Didn't always select all the expected users for notification
 FIX: Set the start times for the time intervals correctly (midnight to midnight)
