@@ -79,10 +79,10 @@ function pmpror_recurring_emails()
 				GROUP BY mo.user_id
 				ORDER BY mo.timestamp DESC",
             "pmpro_recurring_notice_{$days}", // for meta_key to lookup
-            "{$today} 23:59:59", // for Day w/date
-            "{$today} 23:59:59", // for Week w/date
-            "{$today} 23:59:59", // for Month w/date
-            "{$today} 23:59:59", // for Year w/date
+            "{$today} 00:00:00", // for Day w/date
+            "{$today} 00:00:00", // for Week w/date
+            "{$today} 00:00:00", // for Month w/date
+            "{$today} 00:00:00", // for Year w/date
             "{$today} 23:59:59", // for Day w/date & interval
             $days,                 // for Day w/date & interval
             "{$today} 23:59:59", // for Week w/date & interval
@@ -91,7 +91,7 @@ function pmpror_recurring_emails()
             $days,                 // for Month w/date & interval
             "{$today} 23:59:59", // for Year w/date & interval
             $days,                 // for Year w/date & interval
-            "{$today} 23:59:59", // for um.metavalue
+            "{$today} 00:00:00", // for um.metavalue
             "{$today} 23:59:59", // for um.metavalue date_add
             $days // for um.metavalue date + interval
         );
@@ -220,7 +220,7 @@ function pmprore_add_to_templates($templates) {
         $templates["{$templ}"] = array(
             'subject' => __("Happening soon: The recurring payment for your membership at {$site}", "pmprore"),
             'description' => __("Membership level recurring payment message for {$site}", "pmprore"),
-            'body' => file_get_contents( plugin_dir_url(__FILE__) . "/emails/{$templ}.html" ),
+            'body' => file_get_contents( plugin_dir_path(__FILE__) . "emails/{$templ}.html" ),
         );
     }
 
