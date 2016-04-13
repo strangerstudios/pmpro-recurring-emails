@@ -220,6 +220,7 @@ function pmprore_add_to_templates($templates) {
         $templates["{$templ}"] = array(
             'subject' => __("Happening soon: The recurring payment for your membership at {$site}", "pmprore"),
             'description' => __("Membership level recurring payment message for {$site}", "pmprore"),
+            'dir_path' => plugin_dir_url(__FILE__) . "/emails/",
         );
     }
 
