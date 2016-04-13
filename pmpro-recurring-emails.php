@@ -1,18 +1,21 @@
 <?php
 /*
-Plugin Name: PMPro Recurring Emails
+Plugin Name: PMPro Recurring Payment Warning
 Plugin URI: http://www.paidmembershipspro.com/wp/pmpro-recurring-emails/
-Description: Sends out an email 7 days before a recurring payment is made to remind members.
-Version: .2.1
-Author: Stranger Studios
+Description: Sends out email message(s) X days before a recurring payment is made, to warn/remind members.
+Version: .3
+Author: Stranger Studios, Thomas Sjolshagen <thomas@eighty20results.com>
 Author URI: http://www.strangerstudios.com
 */
 /*
-	We want to send a reminder to email to members 7 days before their membership renews.
+	We want to send a reminder to email to members N days before their membership renews.
 	
 	This plugin is meant to be used with recurring membership levels in PMPro. Normally
 	an email is sent when the recurring payment goes through. We want to send an extra
-	email 7 days before this.
+	email X days before this.
+
+    The email template, # of messages & days before sending can be configured
+    w/the pmpro_upcoming_recurring_payment_reminder filter.
 */
 
 //run our cron at the same time as the expiration warning emails
@@ -196,3 +199,30 @@ function pmpror_recurring_emails()
         }
     }
 }
+
+/**
+ * Add message template to the Email templates add-on (if installed).
+ *
+ * @param $templates - The previously defined template aray
+ * @return mixed - (possibly) updated template array
+ *
+ */
+function pmprore_add_to_templates($templates) {
+
+    $re_emails = apply_filters('pmpro_upcoming_recurring_payment_reminder', array(
+        7 => 'membership_recurring'
+    ));
+
+    $site = get_option('blogname');
+
+    foreach( $re_emails as $days => $templ ) {
+
+        $templates["{$templ}"] = array(
+            'subject' => __("Happening soon: The recurring payment for your membership at {$site}", "pmprore"),
+            'description' => __("Membership level recurring payment message for {$site}", "pmprore"),
+        );
+    }
+
+    return $templates;
+}
+add_filter('pmproet_templates', 'pmprore_add_to_templates', 10, 1);
