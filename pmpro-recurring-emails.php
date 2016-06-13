@@ -3,7 +3,7 @@
 Plugin Name: PMPro Recurring Payment Warning
 Plugin URI: http://www.paidmembershipspro.com/wp/pmpro-recurring-emails/
 Description: Send email message(s) X days before a recurring payment is scheduled, to warn/remind members.
-Version: .3
+Version: .5
 Author: Stranger Studios, Thomas Sjolshagen <thomas@eighty20results.com>
 Author URI: http://www.strangerstudios.com
 */
@@ -49,24 +49,32 @@ function pmpror_recurring_emails()
         $recurring_soon = array();
 
         //look for memberships that are going to renew within a configurable amount of time (1 week by default), but we haven't emailed them yet about it.
-        $sqlQuery = $wpdb->prepare("
-				SELECT mo.user_id, MAX(mo.timestamp) AS timestamp, mu.cycle_number, mu.cycle_period, um.meta_value
+        $sqlQuery = $wpdb->prepare("      
+                SELECT 
+                  mo.user_id, 
+                  MAX(mo.timestamp) AS timestamp, 
+                  mu.cycle_number, 
+                  mu.cycle_period, 
+                  um.meta_value
 				FROM {$wpdb->pmpro_membership_orders} AS mo
 				  LEFT JOIN {$wpdb->pmpro_memberships_users} AS mu ON mu.user_id = mo.user_id AND mu.membership_id = mo.membership_id AND mu.status = 'active'
 				  LEFT JOIN {$wpdb->usermeta} AS um ON um.user_id = mu.user_id AND um.meta_key = %s
-				WHERE mu.cycle_number > 0 AND (
-				  um.meta_value IS NULL AND mo.timestamp BETWEEN (
+				WHERE mu.cycle_number > 0 AND -- it is recurring
+				  -- there's a meta value (= 2016-05-20 00:00:00) + INTERVAL 7 days before billing (2016-06-20 00:00:00 <= 2016-06-13 00:00:00 )
+				  (um.meta_value IS NULL OR DATE_ADD(um.meta_value, INTERVAL %d DAY) <= %s) AND 				
+				  mo.timestamp BETWEEN ( 
 						CASE mu.cycle_period
 						WHEN 'Day'
 						  THEN DATE_SUB(%s, INTERVAL mu.cycle_number DAY)
 						WHEN 'Week'
 						  THEN DATE_SUB(%s, INTERVAL mu.cycle_number WEEK)
+						-- AND there's an order recorded between (2016-06-13 00:00:00 minus 1 month =) 2016-05-13 00:00:00
 						WHEN 'Month'
 						  THEN DATE_SUB(%s, INTERVAL mu.cycle_number MONTH)
 						WHEN 'Year'
 						  THEN DATE_SUB(%s, INTERVAL mu.cycle_number YEAR)
 						END
-				  	) AND (
+				  	) AND ( -- AND ( 2016-06-13 23:59:59 minus 1 month - 2016-05-13-2016 23:59:59 - plus 7 days) 2016-05-20 23:59:59
 						CASE mu.cycle_period
 						WHEN 'Day'
 						  THEN DATE_ADD(DATE_SUB(%s, INTERVAL mu.cycle_number DAY), INTERVAL %d DAY)
@@ -78,10 +86,10 @@ function pmpror_recurring_emails()
 						  THEN DATE_ADD(DATE_SUB(%s, INTERVAL mu.cycle_number YEAR), INTERVAL %d DAY)
 						END
 				  	)
-				  ) OR (um.meta_value BETWEEN %s AND DATE_ADD(%s, INTERVAL %d DAY))
-				GROUP BY mo.user_id
-				ORDER BY mo.timestamp DESC",
+				  )",
             "pmpro_recurring_notice_{$days}", // for meta_key to lookup
+            $days,                  // days before charge is made
+            "{$today} 23:59:59",    // for um.meta_value + days before charge is made
             "{$today} 00:00:00", // for Day w/date
             "{$today} 00:00:00", // for Week w/date
             "{$today} 00:00:00", // for Month w/date
@@ -93,29 +101,8 @@ function pmpror_recurring_emails()
             "{$today} 23:59:59", // for Month w/date & interval
             $days,                 // for Month w/date & interval
             "{$today} 23:59:59", // for Year w/date & interval
-            $days,                 // for Year w/date & interval
-            "{$today} 00:00:00", // for um.metavalue
-            "{$today} 23:59:59", // for um.metavalue date_add
-            $days // for um.metavalue date + interval
+            $days                // for Year w/date & interval
         );
-
-        /*		$sqlQuery = "SELECT mo.user_id, MAX(mo.timestamp), mu.cycle_number, mu.cycle_period, um.meta_value
-                             FROM $wpdb->pmpro_membership_orders mo
-                                LEFT JOIN $wpdb->pmpro_memberships_users mu ON mu.user_id = mo.user_id AND mu.membership_id = mo.membership_id AND mu.status = 'active'
-                                LEFT JOIN $wpdb->usermeta um ON um.user_id = mu.user_id AND um.meta_key = 'pmpro_recurring_notice_" . $days . "'
-                             WHERE mu.cycle_number > 0 AND
-                                CASE mu.cycle_period
-                                    WHEN 'Day' THEN DATE_SUB(DATE_ADD(mo.timestamp, INTERVAL mu.cycle_number DAY), INTERVAL " . $days . " DAY)
-                                    WHEN 'Week' THEN DATE_SUB(DATE_ADD(mo.timestamp, INTERVAL mu.cycle_number WEEK), INTERVAL " . $days . " DAY)
-                                    WHEN 'Month' THEN DATE_SUB(DATE_ADD(mo.timestamp, INTERVAL mu.cycle_number MONTH), INTERVAL " . $days . " DAY)
-                                    WHEN 'Year' THEN DATE_SUB(DATE_ADD(mo.timestamp, INTERVAL mu.cycle_number YEAR), INTERVAL " . $days . " DAY)
-                                    ELSE '9999-99-99'
-                                 END
-                                <= '" . $today . "' AND
-                                (um.meta_value IS NULL OR DATE_ADD(um.meta_value, INTERVAL " . $days . " Day) <= '" . $today . "')
-                             GROUP BY mo.user_id
-                             ORDER BY mo.timestamp DESC";
-                */
 
         if (WP_DEBUG) {
             error_log("SQL used to fetch user list:");
@@ -157,11 +144,21 @@ function pmpror_recurring_emails()
                 $pmproemail->email = $euser->user_email;
                 $pmproemail->subject = sprintf(__("Your membership at %s will renew soon", "pmpro"), get_option("blogname"));
                 $pmproemail->template = $template;
-                $pmproemail->data = array("subject" => $pmproemail->subject, "name" => $euser->display_name, "user_login" => $euser->user_login, "sitename" => get_option("blogname"), "membership_id" => $euser->membership_level->id, "membership_level_name" => $euser->membership_level->name, "siteemail" => pmpro_getOption("from_email"), "login_link" => wp_login_url(), "enddate" => date(get_option('date_format'), $euser->membership_level->enddate), "display_name" => $euser->display_name, "user_email" => $euser->user_email);
-
-                //cancel link
-                $pmproemail->data['cancel_link'] = wp_login_url(pmpro_url("cancel"));
-
+                $pmproemail->data = array(
+                    "subject" => $pmproemail->subject,
+                    "name" => $euser->display_name,
+                    "user_login" => $euser->user_login,
+                    "sitename" => get_option("blogname"),
+                    "membership_id" => $euser->membership_level->id,
+                    "membership_level_name" => $euser->membership_level->name,
+                    "siteemail" => pmpro_getOption("from_email"),
+                    "login_link" => wp_login_url(),
+                    "enddate" => date(get_option('date_format'), $euser->membership_level->enddate),
+                    "display_name" => $euser->display_name,
+                    "user_email" => $euser->user_email,
+                    "cancel_link" => wp_login_url(pmpro_url("cancel"))
+                );
+                
                 //get last order
                 $lastorder = new MemberOrder();
                 $lastorder->getLastMemberOrder($euser->ID);
@@ -210,14 +207,20 @@ function pmpror_recurring_emails()
                     $sent_emails[] = $euser->ID;
                 } else {
                     //shouldn't get here, but if no order found, just continue
-                    printf(__("Couldn't find the last order for %s. ", "pmpro"), $euser->user_email);
+                    printf(__("Couldn't find the last order for %s.", "pmpro"), $euser->user_email);
                 }
             }
 
             //update user meta so we don't email them again
-            foreach ($emails as $d) {
-                if (intval($d) >= intval($days)) {
-                    update_user_meta($e->user_id, "pmpro_recurring_notice_" . $d, date("Y-m-d 00:00:00", strtotime("+" . (intval($d) + 1) . " Days", strtotime($today))));
+            foreach ($emails as $d => $t ) {
+                // update the meta value/key if we're looking at a reminder/template to be sent at or before the one being sent
+                if ( intval($d) >= intval($days) ) {
+                    update_user_meta(
+                        $e->user_id,
+                        "pmpro_recurring_notice_{$d}",
+                        date( "Y-m-d 00:00:00", strtotime( "+" . ( intval($d) + 1 ) . " days", current_time('timestamp') ) )
+
+                );
                 }
             } // foreach sent emails
         } // foreach (users to process)
