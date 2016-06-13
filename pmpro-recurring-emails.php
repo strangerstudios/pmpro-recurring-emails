@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: PMPro Recurring Emails
+Plugin Name: Paid Memberships Pro - Recurring Emails Add On
 Plugin URI: http://www.paidmembershipspro.com/wp/pmpro-recurring-emails/
 Description: Sends out an email 7 days before a recurring payment is made to remind members.
 Version: .2.1
@@ -35,6 +35,10 @@ function pmpro_recurring_emails()
 	*/
 	$emails = array(7);		//<--- !!! UPDATE THIS LINE TO CHANGE WHEN EMAILS GO OUT !!! -->
 	sort($emails, SORT_NUMERIC);
+	
+	//we enable some filters to improve the accuracy of pmpro_next_payment
+	add_filter('pmpro_next_payment', array('PMProGateway_paypalexpress', 'pmpro_next_payment'), 10, 3);
+	add_filter('pmpro_next_payment', array('PMProGateway_stripe', 'pmpro_next_payment'), 10, 3);
 	
 	//array to store ids of folks we sent emails to so we don't email them twice
 	$sent_emails = array();
@@ -151,3 +155,18 @@ function pmpro_recurring_emails()
 		}
 	}
 }
+
+/*
+Function to add links to the plugin row meta
+*/
+function pmpro_recurring_emails_plugin_row_meta($links, $file) {
+	if(strpos($file, 'pmpro-recurring-emails.php') !== false)
+	{
+		$new_links = array(
+			'<a href="' . esc_url('http://paidmembershipspro.com/support/') . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro' ) ) . '">' . __( 'Support', 'pmpro' ) . '</a>',
+		);
+		$links = array_merge($links, $new_links);
+	}
+	return $links;
+}
+add_filter('plugin_row_meta', 'pmpro_recurring_emails_plugin_row_meta', 10, 2);

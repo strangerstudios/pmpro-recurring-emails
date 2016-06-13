@@ -1,8 +1,8 @@
-=== PMPro Recurring Emails ===
+=== Paid Memberships Pro - Recurring Emails Add On ===
 Contributors: strangerstudios
 Tags: pmpro, paid memberships pro, files, uploads, downloads, secure, protect, lock
 Requires at least: 3.5
-Tested up to: 4.0.1
+Tested up to: 4.2.2
 Stable tag: .2.1
 
 Sends out an email 7 days before a recurring payment is made to remind members.
