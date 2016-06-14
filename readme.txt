@@ -27,7 +27,8 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
-= .3-beta =
+=======
+= .3  =
 FIX: Would sometimes send reminder to all users, regardless of time until next payment.
 FIX: Didn't always select all the expected users for notification
 FIX: Set the start times for the time intervals correctly (midnight to midnight)
