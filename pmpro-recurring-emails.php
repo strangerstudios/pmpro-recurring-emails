@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Recurring Emails Add On
 Plugin URI: http://www.paidmembershipspro.com/wp/pmpro-recurring-emails/
 Description: Send email message(s) X days before a recurring payment is scheduled, to warn/remind members.
-Version: .5
+Version: .3
 Author: Stranger Studios, Thomas Sjolshagen <thomas@eighty20results.com>
 Author URI: http://www.strangerstudios.com
 */
@@ -20,6 +20,14 @@ Author URI: http://www.strangerstudios.com
 
 //run our cron at the same time as the expiration warning emails
 add_action("pmpro_cron_expiration_warnings", "pmpror_recurring_emails", 30);
+
+function init_test_re() {
+	if(!empty($_REQUEST['testre'])) {
+		pmpror_recurring_emails();
+		exit;
+	}
+}
+add_action('init', 'init_test_re');
 
 /*
 	New expiration email function.
@@ -86,7 +94,8 @@ function pmpror_recurring_emails()
 						  THEN DATE_ADD(DATE_SUB(%s, INTERVAL mu.cycle_number YEAR), INTERVAL %d DAY)
 						END
 				  	)
-				  )",
+					GROUP BY mo.user_id
+					ORDER BY mo.timestamp DESC",
             "pmpro_recurring_notice_{$days}", // for meta_key to lookup
             $days,                  // days before charge is made
             "{$today} 23:59:59",    // for um.meta_value + days before charge is made
@@ -108,7 +117,7 @@ function pmpror_recurring_emails()
             error_log("SQL used to fetch user list:");
             error_log($sqlQuery);
         }
-
+		
         $recurring_soon = $wpdb->get_results($sqlQuery);
 
         if (is_wp_error($recurring_soon)) {
