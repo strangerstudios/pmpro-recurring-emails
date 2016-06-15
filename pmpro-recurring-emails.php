@@ -197,14 +197,17 @@ function pmpror_recurring_emails()
                     //set body
                     $pmproemail->body = pmpro_loadTemplate($template, 'local', 'emails', 'html');
 
-                    //send the email
-                    $pmproemail->sendEmail();
+                    if (true === apply_filters('pmprorm_send_reminder_to_user', true, $euser, $lastorder)) {
+                        //send the email
+                        $pmproemail->sendEmail();
 
-                    //notify script
-                    printf(__("Membership renewing email sent to %s.<br />", "pmpro"), $euser->user_email);
+                        //notify script
+                        printf(__("Membership renewing email sent to %s.<br />", "pmpro"), $euser->user_email);
 
-                    //remember so we don't send twice
-                    $sent_emails[] = $euser->ID;
+                        //remember so we don't send twice
+                        $sent_emails[] = $euser->ID;
+                    }
+
                 } else {
                     //shouldn't get here, but if no order found, just continue
                     printf(__("Couldn't find the last order for %s.", "pmpro"), $euser->user_email);
