@@ -37,6 +37,7 @@ ENH: Add support for inclusion in the Email Templates add-on
 ENH: Added error logging & error checking
 ENH: WP Style
 ENH: Add filter for recurring payment settings
+ENH: Adding pmprorm_send_reminder_to_user filter
 REF: Renamed template directory for pmpro_getTemplate() function to load template(s)
 
 = .2.1 =
