@@ -32,11 +32,6 @@ function init_test_re() {
 }
 add_action('init', 'init_test_re');
 
-/*
-	Generate & send
-	Set the $emails array to include the days you want to send warning emails.
-	e.g. array(30,60,90) sends emails 30, 60, and 90 days before renewal.
-*/
 /**
  * Generate and send reminder(s) of upcoming payment event to members w/recurring membership subscription plans
  *
