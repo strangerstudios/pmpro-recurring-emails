@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Recurring Emails Add On
 Plugin URI: http://www.paidmembershipspro.com/wp/pmpro-recurring-emails/
 Description: Send email message(s) X days before a recurring payment is scheduled, to warn/remind members.
-Version: .3
+Version: .4
 Author: Stranger Studios, Thomas Sjolshagen <thomas@eighty20results.com>
 Author URI: http://www.strangerstudios.com
 */
@@ -12,7 +12,7 @@ Author URI: http://www.strangerstudios.com
 	
 	This plugin is meant to be used with recurring membership levels in PMPro. Normally
 	an email is sent when the recurring payment goes through. We want to send an extra
-	email X days before this.
+	email N days before this.
 
     The email template, # of messages & days before sending can be configured
     w/the pmpro_upcoming_recurring_payment_reminder filter.
@@ -21,6 +21,9 @@ Author URI: http://www.strangerstudios.com
 //run our cron at the same time as the expiration warning emails
 add_action("pmpro_cron_expiration_warnings", "pmpror_recurring_emails", 30);
 
+/**
+ * Manually trigger the process (test)
+ */
 function init_test_re() {
 	if(!empty($_REQUEST['testre'])) {
 		pmpror_recurring_emails();
@@ -30,10 +33,18 @@ function init_test_re() {
 add_action('init', 'init_test_re');
 
 /*
-	New expiration email function.
+	Generate & send
 	Set the $emails array to include the days you want to send warning emails.
 	e.g. array(30,60,90) sends emails 30, 60, and 90 days before renewal.
 */
+/**
+ * Generate and send reminder(s) of upcoming payment event to members w/recurring membership subscription plans
+ *
+ * Use pmpro_upcoming_recurring_payment_reminder filter to set array of days (key) and
+ * template name (value) (<template_name>.html) to use when sending reminder.
+ *
+ * Use pmprorm_send_reminder_to_user filter to disable sending notice to all/any individual user(s)
+ */
 function pmpror_recurring_emails()
 {
 	global $wpdb;
@@ -41,9 +52,13 @@ function pmpror_recurring_emails()
     //get todays date for later calculations
     $today = date_i18n("Y-m-d", current_time("timestamp"));
 
-    /*
-        This filter will set set how many days before you want to send, and the template to use
-    */
+    /**
+     *  Filter will set how many days before you want to send, and the template to use
+     *
+     * @filter  pmpro_upcoming_recurring_payment_reminder
+     * @param   array   $reminders      key = # of days before payment will be charged (7 => 'membership_recurring')
+     *                                  value = name of template to use w/o extension (membership_recurring.html)
+      */
     $emails = apply_filters('pmpro_upcoming_recurring_payment_reminder', array(
         7 => 'membership_recurring'
     ));
@@ -206,6 +221,13 @@ function pmpror_recurring_emails()
                     //set body
                     $pmproemail->body = pmpro_loadTemplate($template, 'local', 'emails', 'html');
 
+	                /**
+	                 * @filter      pmprorm_send_reminder_to_user
+	                 *
+	                 * @param       boolean             $send_mail      - Whether to send mail or not (true by default)
+	                 * @param       WP_User             $user           - User object being processed
+	                 * @param       MembershipOrder     $lastorder      - order object for previous order saved
+	                 */
                     if (true === apply_filters('pmprorm_send_reminder_to_user', true, $euser, $lastorder)) {
                         //send the email
                         $pmproemail->sendEmail();
@@ -266,6 +288,26 @@ function pmprore_add_to_templates($templates) {
     return $templates;
 }
 add_filter('pmproet_templates', 'pmprore_add_to_templates', 10, 1);
+
+/**
+ * Filter hook for the included upcoming payment warning message
+ *
+ * @param array $templates
+ * @param string $page_name
+ * @param string $type
+ * @param string $where
+ * @param string $ext
+ *
+ * @return array        -- Path to the plugin specific template file
+ */
+function pmprore_add_email_template( $templates, $page_name, $type = 'emails', $where = 'local', $ext = 'html') {
+
+	$templates[] = plugin_dir_path(__FILE__) . "emails/membership_recurring.html";
+
+	return $templates;
+}
+
+add_filter('pmpro_email_custom_template_path', 'pmprore_add_email_template', 10, 5);
 
 /*
 Function to add links to the plugin row meta

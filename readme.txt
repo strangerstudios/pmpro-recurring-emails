@@ -28,7 +28,11 @@ Please visit our premium support site at http://www.paidmembershipspro.com for m
 
 == Changelog ==
 =======
-= .3  =
+= .4 =
+FIX: Didn't always include the membership_recurring.html template
+ENH: Documentation for filters
+
+= .3 =
 FIX: Would sometimes send reminder to all users, regardless of time until next payment.
 FIX: Didn't always select all the expected users for notification
 FIX: Set the start times for the time intervals correctly (midnight to midnight)
