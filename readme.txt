@@ -2,8 +2,8 @@
 Contributors: strangerstudios
 Tags: pmpro, paid memberships pro, files, uploads, downloads, secure, protect, lock
 Requires at least: 3.5
-Tested up to: 4.5.2
-Stable tag: .3
+Tested up to: 4.6
+Stable tag: .5
 
 Sends out an email 7 days before a recurring payment is made to remind members.
 
@@ -28,7 +28,15 @@ Please visit our premium support site at http://www.paidmembershipspro.com for m
 
 == Changelog ==
 =======
-= .3  =
+= .5 =
+FIX: Too restrictive when looking for recurring memberships to warn of upcoming payments for
+FIX: Make sure the test mode doesn't actually send any emails (record to error_log())
+
+= .4 =
+FIX: Didn't always include the membership_recurring.html template
+ENH: Documentation for filters
+
+= .3 =
 FIX: Would sometimes send reminder to all users, regardless of time until next payment.
 FIX: Didn't always select all the expected users for notification
 FIX: Set the start times for the time intervals correctly (midnight to midnight)
