@@ -24,9 +24,8 @@ add_action( "pmpro_cron_expiration_warnings", "pmpror_recurring_emails", 30 );
 /**
  * Manually trigger the process (test)
  */
-/*
-function init_test_re() {
-	if ( ! empty( $_REQUEST['testre'] ) ) {
+function pmpror_init_test() {
+	if ( ! empty( $_REQUEST['pmpror_test'] ) && current_user_can( 'manage_options' ) ) {
 
 		// Do NOT send the email message(s)!
 		add_filter( 'pmprorm_send_reminder_to_user', '__return_false' );
@@ -39,8 +38,7 @@ function init_test_re() {
 		exit;
 	}
 }
-add_action( 'init', 'init_test_re' );
-*/
+add_action( 'init', 'pmpror_init_test' );
 
 /**
  * Generate and send reminder(s) of upcoming payment event to members w/recurring membership subscription plans
