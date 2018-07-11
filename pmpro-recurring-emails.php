@@ -92,16 +92,17 @@ function pmpror_recurring_emails() {
 				                                 AND mo.timestamp = (SELECT MAX(mo2.timestamp) -- Last order processed
 				                                                     FROM {$wpdb->pmpro_membership_orders} AS mo2
 				                                                     WHERE mo.user_id = mo2.user_id AND mo2.status = 'success' )
-				                                 AND ( (um.meta_key = %s AND DATE_ADD(um.meta_value, INTERVAL %d DAY) <= %s )
-				                                       OR ( um.meta_key IS NULL AND um.meta_value IS NULL ) 
-				                                     )
 				  LEFT JOIN {$wpdb->pmpro_memberships_users} AS mu
 				    ON mu.user_id = mo.user_id -- Same user
 				       AND mu.membership_id = mo.membership_id -- same membership ID
 				       AND mu.status = 'active' -- Active membership
 				       AND (mu.enddate IS NULL OR mu.enddate = '0000-00-00 00:00:00') -- Has no enddate
 				WHERE (mu.cycle_number IS NOT NULL OR mu.cycle_number != 0) -- Has recurring membership
-				      AND mo.timestamp BETWEEN ( -- Last order was processed
+					AND ( 
+						( um.meta_key = %s AND DATE_ADD( um.meta_value, INTERVAL %d DAY ) <= %s )
+						OR ( um.meta_key IS NULL AND um.meta_value IS NULL ) 
+				        )
+					AND mo.timestamp BETWEEN ( -- Last order was processed
 				  CASE mu.cycle_period
 				  WHEN 'Day'
 				    THEN DATE_SUB(%s, INTERVAL mu.cycle_number DAY)
