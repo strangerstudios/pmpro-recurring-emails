@@ -2,7 +2,7 @@
 Contributors: strangerstudios
 Tags: pmpro, paid memberships pro, files, uploads, downloads, secure, protect, lock
 Requires at least: 4
-Tested up to: 4.9.7
+Tested up to: 4.9.8
 Stable tag: .5.1
 
 Sends out an email 7 days before a recurring payment is made to remind members.
