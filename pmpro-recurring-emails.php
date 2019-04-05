@@ -165,6 +165,11 @@ function pmpror_recurring_emails() {
 				//send an email
 				$pmproemail = new PMProEmail();
 				$euser      = get_userdata( $e->user_id );
+				
+				// Make sure we have a user.
+				if ( empty( $euser ) ) {
+					continue;
+				}
 
 				//make sure we have the current membership level data
 				$euser->membership_level = pmpro_getMembershipLevelForUser( $euser->ID );
