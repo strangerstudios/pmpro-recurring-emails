@@ -333,7 +333,7 @@ function pmprore_add_email_template( $templates, $page_name, $type = 'emails', $
 	return $templates;
 }
 
-add_filter( 'pmpro_email_custom_template_path', 'pmprore_add_email_template', 10, 5 );
+add_filter( 'pmpro_emails_custom_template_path', 'pmprore_add_email_template', 10, 5 );
 
 /*
 Function to add links to the plugin row meta
