@@ -131,8 +131,7 @@ function pmpror_recurring_emails() {
 			"{$today} 23:59:59", // for Month w/date & interval
 			$days,                 // for Month w/date & interval
 			"{$today} 23:59:59", // for Year w/date & interval
-			$days,	            // for Year w/date & interval
-			"{$today} 00:00:00"
+			$days	            // for Year w/date & interval
 		);
 
 		if ( WP_DEBUG ) {
@@ -302,11 +301,15 @@ function pmprore_add_to_templates( $templates ) {
 	$site = get_option( 'blogname' );
 
 	foreach ( $re_emails as $days => $templ ) {
+		$body = '';
+		if ( file_exists( plugin_dir_path( __FILE__ ) . "emails/{$templ}.html" ) ) {
+			$body = file_get_contents( plugin_dir_path( __FILE__ ) . "emails/{$templ}.html" );
+		}
 
 		$templates["{$templ}"] = array(
 			'subject'     => __( "Happening soon: The recurring payment for your membership at {$site}", "pmprore" ),
 			'description' => __( "Membership level recurring payment message for {$site}", "pmprore" ),
-			'body'        => file_get_contents( plugin_dir_path( __FILE__ ) . "emails/{$templ}.html" ),
+			'body'        => $body,
 		);
 	}
 
