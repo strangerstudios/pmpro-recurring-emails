@@ -98,18 +98,18 @@ function pmpror_recurring_emails() {
 				AND             mo.status = 'success' 
 				AND             mo.timestamp BETWEEN 
 				                CASE mu.cycle_period 
-				                                WHEN 'Day' THEN ('%s'   - INTERVAL mu.cycle_number day) 
-				                                WHEN 'Week' THEN ('%s'  - INTERVAL mu.cycle_number week) 
-				                                WHEN 'Month' THEN ('%s' - INTERVAL mu.cycle_number month) 
-				                                WHEN 'Year' THEN ('%s'  - INTERVAL mu.cycle_number year) 
-				                end 
+				                                WHEN 'Day' THEN ('%s'   - INTERVAL mu.cycle_number DAY) 
+				                                WHEN 'Week' THEN ('%s'  - INTERVAL mu.cycle_number WEEK) 
+				                                WHEN 'Month' THEN ('%s' - INTERVAL mu.cycle_number MONTH) 
+				                                WHEN 'Year' THEN ('%s'  - INTERVAL mu.cycle_number YEAR) 
+				                END 
 				AND 
 				                CASE mu.cycle_period 
-				                                WHEN 'Day' THEN ('%s'   - INTERVAL mu.cycle_number day + INTERVAL %d day)
-				                                WHEN 'Week' THEN ('%s'  - INTERVAL mu.cycle_number week + INTERVAL %d day)
-				                                WHEN 'Month' THEN ('%s' - INTERVAL mu.cycle_number month + INTERVAL %d day)
-				                                WHEN 'Year' THEN ('%s'  - INTERVAL mu.cycle_number year + INTERVAL %d day)
-				                end 
+				                                WHEN 'Day' THEN ('%s'   - INTERVAL mu.cycle_number DAY + INTERVAL %d DAY)
+				                                WHEN 'Week' THEN ('%s'  - INTERVAL mu.cycle_number WEEK + INTERVAL %d DAY)
+				                                WHEN 'Month' THEN ('%s' - INTERVAL mu.cycle_number MONTH + INTERVAL %d DAY)
+				                                WHEN 'Year' THEN ('%s'  - INTERVAL mu.cycle_number YEAR + INTERVAL %d DAY)
+				                END 
 				AND             ( 
 				                                um.meta_value <= '2019-04-03' 
 				                OR              um.meta_value IS NULL) 

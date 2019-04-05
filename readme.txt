@@ -30,6 +30,7 @@ Please visit our premium support site at http://www.paidmembershipspro.com for m
 = .5.2 = 
 * BUG FIX: Fixed SQL query for finding users with recurring payments.
 * BUG FIX: Finding correct email templates in /emails directory.
+* BUG FIX: Removed warnings and notices.
 
 = .5.1 =
 * BUG FIX: Didn't always exclude recent notices.
