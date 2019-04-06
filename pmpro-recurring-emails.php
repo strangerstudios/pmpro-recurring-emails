@@ -58,7 +58,7 @@ function pmpror_recurring_emails() {
 
 	//get todays date for later calculations
 	$today = date_i18n( "Y-m-d", current_time( "timestamp" ) );
-
+	
 	/**
 	 *  Filter will set how many days before you want to send, and the template to use
 	 *
@@ -111,7 +111,7 @@ function pmpror_recurring_emails() {
 				                                WHEN 'Year' THEN ('%s'  - INTERVAL mu.cycle_number YEAR + INTERVAL %d DAY)
 				                END 
 				AND             ( 
-				                                um.meta_value <= '2019-04-03' 
+				                                um.meta_value <= '%s' 
 				                OR              um.meta_value IS NULL) 
 				AND             ( 
 				                                mu.enddate IS NULL 
@@ -131,7 +131,8 @@ function pmpror_recurring_emails() {
 			"{$today} 23:59:59", // for Month w/date & interval
 			$days,                 // for Month w/date & interval
 			"{$today} 23:59:59", // for Year w/date & interval
-			$days	            // for Year w/date & interval
+			$days,            // for Year w/date & interval
+			"{$today} 00:00:00" // for meta_value to lookup
 		);
 
 		if ( WP_DEBUG ) {
@@ -170,7 +171,7 @@ function pmpror_recurring_emails() {
 				if ( empty( $euser ) ) {
 					continue;
 				}
-
+				
 				//make sure we have the current membership level data
 				$euser->membership_level = pmpro_getMembershipLevelForUser( $euser->ID );
 
@@ -306,11 +307,7 @@ function pmprore_add_to_templates( $templates ) {
 	$site = get_option( 'blogname' );
 
 	foreach ( $re_emails as $days => $templ ) {
-		$body = '';
-		if ( file_exists( plugin_dir_path( __FILE__ ) . "emails/{$templ}.html" ) ) {
-			$body = file_get_contents( plugin_dir_path( __FILE__ ) . "emails/{$templ}.html" );
-		}
-
+		$body = pmpro_loadTemplate( $templ, 'local', 'emails', 'html' );
 		$templates["{$templ}"] = array(
 			'subject'     => __( "Happening soon: The recurring payment for your membership at {$site}", "pmprore" ),
 			'description' => __( "Membership level recurring payment message for {$site}", "pmprore" ),
