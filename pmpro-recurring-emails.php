@@ -81,58 +81,52 @@ function pmpror_recurring_emails() {
 
 		//look for memberships that are going to renew within a configurable amount of time (1 week by default), but we haven't emailed them yet about it.
 		$sqlQuery = $wpdb->prepare( "      
-				SELECT DISTINCT mo.user_id 
-				FROM            wp_pmpro_membership_orders mo 
-				LEFT JOIN       wp_pmpro_memberships_users mu 
-				ON              mu.user_id = mo.user_id 
-				AND             mu.membership_id = mo.membership_id 
-				LEFT JOIN       wp_usermeta um 
-				ON              um.user_id = mo.user_id 
-				AND             um.meta_key = '%s' 
-				WHERE           mo.timestamp = 
-				                ( 
-				                       SELECT Max(mo2.timestamp) 
-				                       FROM   wp_pmpro_membership_orders mo2 
-				                       WHERE  mo2.user_id = mo.user_id 
-				                       AND    status = 'success') 
-				AND             mo.status = 'success' 
-				AND             mo.timestamp BETWEEN 
-				                CASE mu.cycle_period 
-				                                WHEN 'Day' THEN ('%s'   - INTERVAL mu.cycle_number DAY) 
-				                                WHEN 'Week' THEN ('%s'  - INTERVAL mu.cycle_number WEEK) 
-				                                WHEN 'Month' THEN ('%s' - INTERVAL mu.cycle_number MONTH) 
-				                                WHEN 'Year' THEN ('%s'  - INTERVAL mu.cycle_number YEAR) 
-				                END 
-				AND 
-				                CASE mu.cycle_period 
-				                                WHEN 'Day' THEN ('%s'   - INTERVAL mu.cycle_number DAY + INTERVAL %d DAY)
-				                                WHEN 'Week' THEN ('%s'  - INTERVAL mu.cycle_number WEEK + INTERVAL %d DAY)
-				                                WHEN 'Month' THEN ('%s' - INTERVAL mu.cycle_number MONTH + INTERVAL %d DAY)
-				                                WHEN 'Year' THEN ('%s'  - INTERVAL mu.cycle_number YEAR + INTERVAL %d DAY)
-				                END 
-				AND             ( 
-				                                um.meta_value <= '%s' 
-				                OR              um.meta_value IS NULL) 
-				AND             ( 
-				                                mu.enddate IS NULL 
-				                OR              mu.enddate = '0000-00-00 00:00:00') 
-				AND             mu.cycle_number > 0 
-				AND             mu.cycle_period IS NOT NULL 
-				AND             mu.status = 'active'",
-			"pmpro_recurring_notice_{$days}", // for meta_key to lookup
-			"{$today} 00:00:00", // for Day w/date
-			"{$today} 00:00:00", // for Week w/date
-			"{$today} 00:00:00", // for Month w/date
-			"{$today} 00:00:00", // for Year w/date
-			"{$today} 23:59:59", // for Day w/date & interval
-			$days,                 // for Day w/date & interval
-			"{$today} 23:59:59", // for Week w/date & interval
-			$days,                 // for Week w/date & interval
-			"{$today} 23:59:59", // for Month w/date & interval
-			$days,                 // for Month w/date & interval
-			"{$today} 23:59:59", // for Year w/date & interval
-			$days,            // for Year w/date & interval
-			"{$today} 00:00:00" // for meta_value to lookup
+			SELECT DISTINCT mo.user_id 
+			FROM wp_pmpro_membership_orders mo 
+				LEFT JOIN wp_pmpro_memberships_users mu 
+					ON mu.user_id = mo.user_id 
+					AND mu.membership_id = mo.membership_id 
+				LEFT JOIN wp_usermeta um 
+					ON um.user_id = mo.user_id 
+					AND um.meta_key = '%s' 
+			WHERE mo.timestamp = ( SELECT Max(mo2.timestamp) 
+									FROM   wp_pmpro_membership_orders mo2 
+									WHERE  mo2.user_id = mo.user_id 
+									AND    status = 'success' ) 
+				AND mo.status = 'success' 
+				AND mo.timestamp BETWEEN 					
+					CASE mu.cycle_period 
+						WHEN 'Day' THEN ('%s' - INTERVAL mu.cycle_number DAY) 
+						WHEN 'Week' THEN ('%s' - INTERVAL mu.cycle_number WEEK) 
+						WHEN 'Month' THEN ('%s' - INTERVAL mu.cycle_number MONTH) 
+						WHEN 'Year' THEN ('%s' - INTERVAL mu.cycle_number YEAR) 
+					END					
+					AND
+					CASE mu.cycle_period 
+						WHEN 'Day' THEN ('%s' - INTERVAL mu.cycle_number DAY + INTERVAL %d DAY)
+						WHEN 'Week' THEN ('%s' - INTERVAL mu.cycle_number WEEK + INTERVAL %d DAY)
+						WHEN 'Month' THEN ('%s' - INTERVAL mu.cycle_number MONTH + INTERVAL %d DAY)
+						WHEN 'Year' THEN ('%s' - INTERVAL mu.cycle_number YEAR + INTERVAL %d DAY)
+					END					
+				AND (um.meta_value <= '%s' OR um.meta_value IS NULL) 
+				AND (mu.enddate IS NULL OR mu.enddate = '0000-00-00 00:00:00') 
+				AND mu.cycle_number > 0 
+				AND mu.cycle_period IS NOT NULL 
+				AND mu.status = 'active'",
+			"pmpro_recurring_notice_{$days}", // for meta_key to lookup			
+			"{$today} 00:00:00",			  // for Day w/date
+			"{$today} 00:00:00",			  // for Week w/date
+			"{$today} 00:00:00",			  // for Month w/date
+			"{$today} 00:00:00",			  // for Year w/date			
+			"{$today} 23:59:59", 			  // for Day w/date & interval
+			$days,                 			  // for Day w/date & interval
+			"{$today} 23:59:59", 			  // for Week w/date & interval
+			$days,                 			  // for Week w/date & interval
+			"{$today} 23:59:59", 			  // for Month w/date & interval
+			$days,                 			  // for Month w/date & interval
+			"{$today} 23:59:59", 			  // for Year w/date & interval
+			$days,            				  // for Year w/date & interval
+			"{$today} 00:00:00"				  // for meta_value to lookup
 		);
 
 		if ( WP_DEBUG ) {
@@ -154,7 +148,7 @@ function pmpror_recurring_emails() {
 		if ( WP_DEBUG ) {
 			error_log( "Found {$wpdb->num_rows} records..." );
 		}
-
+	
 		foreach ( $recurring_soon as $e ) {
 
 			if ( ! in_array( $e->user_id, $sent_emails ) ) {
