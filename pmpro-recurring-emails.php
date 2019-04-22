@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Recurring Emails Add On
 Plugin URI: http://www.paidmembershipspro.com/wp/pmpro-recurring-emails/
 Description: Send email message(s) X days before a recurring payment is scheduled, to warn/remind members.
-Version: .5.1
+Version: .5.2
 Author: Stranger Studios, Thomas Sjolshagen <thomas@eighty20results.com>
 Author URI: http://www.strangerstudios.com
 */
@@ -58,7 +58,7 @@ function pmpror_recurring_emails() {
 
 	//get todays date for later calculations
 	$today = date_i18n( "Y-m-d", current_time( "timestamp" ) );
-
+	
 	/**
 	 *  Filter will set how many days before you want to send, and the template to use
 	 *
@@ -81,58 +81,45 @@ function pmpror_recurring_emails() {
 
 		//look for memberships that are going to renew within a configurable amount of time (1 week by default), but we haven't emailed them yet about it.
 		$sqlQuery = $wpdb->prepare( "      
-                SELECT DISTINCT
-				  mo.user_id AS user_id,
-				  mo.timestamp AS timestamp,
-				  mu.cycle_number AS cycle_number,
-				  mu.cycle_period AS cycle_period,
-				  mu.startdate AS startdate,
-				  mu.enddate AS startdate,
-				  mu.status AS status,
-				  um.meta_key AS meta_key,
-				  um.meta_value AS meta_value
-				FROM {$wpdb->pmpro_membership_orders} AS mo
-				  LEFT JOIN {$wpdb->usermeta} AS um ON um.user_id = mo.user_id -- Same user
-				                                 AND mo.timestamp = (SELECT MAX(mo2.timestamp) -- Last order processed
-				                                                     FROM {$wpdb->pmpro_membership_orders} AS mo2
-				                                                     WHERE mo.user_id = mo2.user_id AND mo2.status = 'success' )
-				  LEFT JOIN {$wpdb->pmpro_memberships_users} AS mu
-				    ON mu.user_id = mo.user_id -- Same user
-				       AND mu.membership_id = mo.membership_id -- same membership ID
-				       AND mu.status = 'active' -- Active membership
-				       AND (mu.enddate IS NULL OR mu.enddate = '0000-00-00 00:00:00') -- Has no enddate
-				WHERE (mu.cycle_number IS NOT NULL OR mu.cycle_number != 0) -- Has recurring membership
-					AND ( 
-						( um.meta_key = %s AND DATE_ADD( um.meta_value, INTERVAL %d DAY ) <= %s )
-						OR ( um.meta_key IS NULL AND um.meta_value IS NULL ) 
-				        )
-					AND mo.timestamp BETWEEN ( -- Last order was processed
-				  CASE mu.cycle_period
-				  WHEN 'Day'
-				    THEN DATE_SUB(%s, INTERVAL mu.cycle_number DAY)
-				  WHEN 'Week'
-				    THEN DATE_SUB(%s, INTERVAL mu.cycle_number WEEK)
-				  WHEN 'Month'
-				    THEN DATE_SUB(%s, INTERVAL mu.cycle_number MONTH)
-				  WHEN 'Year'
-				    THEN DATE_SUB(%s, INTERVAL mu.cycle_number YEAR)
-				  END
-				) AND (
-				  CASE mu.cycle_period
-				  WHEN 'Day'
-				    THEN DATE_ADD(DATE_SUB(%s, INTERVAL mu.cycle_number DAY), INTERVAL %d DAY)
-				  WHEN 'Week'
-				    THEN DATE_ADD(DATE_SUB(%s, INTERVAL mu.cycle_number WEEK), INTERVAL %d DAY)
-				  WHEN 'Month'
-				    THEN DATE_ADD(DATE_SUB(%s, INTERVAL mu.cycle_number MONTH), INTERVAL %d DAY)
-				  WHEN 'Year'
-				    THEN DATE_ADD(DATE_SUB(%s, INTERVAL mu.cycle_number YEAR), INTERVAL %d DAY)
-				  END
-				)
-				ORDER BY mo.user_id",
+				SELECT DISTINCT mo.user_id 
+				FROM            wp_pmpro_membership_orders mo 
+				LEFT JOIN       wp_pmpro_memberships_users mu 
+				ON              mu.user_id = mo.user_id 
+				AND             mu.membership_id = mo.membership_id 
+				LEFT JOIN       wp_usermeta um 
+				ON              um.user_id = mo.user_id 
+				AND             um.meta_key = '%s' 
+				WHERE           mo.timestamp = 
+				                ( 
+				                       SELECT Max(mo2.timestamp) 
+				                       FROM   wp_pmpro_membership_orders mo2 
+				                       WHERE  mo2.user_id = mo.user_id 
+				                       AND    status = 'success') 
+				AND             mo.status = 'success' 
+				AND             mo.timestamp BETWEEN 
+				                CASE mu.cycle_period 
+				                                WHEN 'Day' THEN ('%s'   - INTERVAL mu.cycle_number DAY) 
+				                                WHEN 'Week' THEN ('%s'  - INTERVAL mu.cycle_number WEEK) 
+				                                WHEN 'Month' THEN ('%s' - INTERVAL mu.cycle_number MONTH) 
+				                                WHEN 'Year' THEN ('%s'  - INTERVAL mu.cycle_number YEAR) 
+				                END 
+				AND 
+				                CASE mu.cycle_period 
+				                                WHEN 'Day' THEN ('%s'   - INTERVAL mu.cycle_number DAY + INTERVAL %d DAY)
+				                                WHEN 'Week' THEN ('%s'  - INTERVAL mu.cycle_number WEEK + INTERVAL %d DAY)
+				                                WHEN 'Month' THEN ('%s' - INTERVAL mu.cycle_number MONTH + INTERVAL %d DAY)
+				                                WHEN 'Year' THEN ('%s'  - INTERVAL mu.cycle_number YEAR + INTERVAL %d DAY)
+				                END 
+				AND             ( 
+				                                um.meta_value <= '%s' 
+				                OR              um.meta_value IS NULL) 
+				AND             ( 
+				                                mu.enddate IS NULL 
+				                OR              mu.enddate = '0000-00-00 00:00:00') 
+				AND             mu.cycle_number > 0 
+				AND             mu.cycle_period IS NOT NULL 
+				AND             mu.status = 'active'",
 			"pmpro_recurring_notice_{$days}", // for meta_key to lookup
-			$days,                  // days before charge is made
-			"{$today} 23:59:59",    // for um.meta_value + days before charge is made
 			"{$today} 00:00:00", // for Day w/date
 			"{$today} 00:00:00", // for Week w/date
 			"{$today} 00:00:00", // for Month w/date
@@ -144,7 +131,8 @@ function pmpror_recurring_emails() {
 			"{$today} 23:59:59", // for Month w/date & interval
 			$days,                 // for Month w/date & interval
 			"{$today} 23:59:59", // for Year w/date & interval
-			$days                // for Year w/date & interval
+			$days,            // for Year w/date & interval
+			"{$today} 00:00:00" // for meta_value to lookup
 		);
 
 		if ( WP_DEBUG ) {
@@ -178,7 +166,12 @@ function pmpror_recurring_emails() {
 				//send an email
 				$pmproemail = new PMProEmail();
 				$euser      = get_userdata( $e->user_id );
-
+				
+				// Make sure we have a user.
+				if ( empty( $euser ) ) {
+					continue;
+				}
+				
 				//make sure we have the current membership level data
 				$euser->membership_level = pmpro_getMembershipLevelForUser( $euser->ID );
 
@@ -314,11 +307,11 @@ function pmprore_add_to_templates( $templates ) {
 	$site = get_option( 'blogname' );
 
 	foreach ( $re_emails as $days => $templ ) {
-
+		$body = pmpro_loadTemplate( $templ, 'local', 'emails', 'html' );
 		$templates["{$templ}"] = array(
 			'subject'     => __( "Happening soon: The recurring payment for your membership at {$site}", "pmprore" ),
 			'description' => __( "Membership level recurring payment message for {$site}", "pmprore" ),
-			'body'        => file_get_contents( plugin_dir_path( __FILE__ ) . "emails/{$templ}.html" ),
+			'body'        => $body,
 		);
 	}
 
@@ -345,7 +338,7 @@ function pmprore_add_email_template( $templates, $page_name, $type = 'emails', $
 	return $templates;
 }
 
-add_filter( 'pmpro_email_custom_template_path', 'pmprore_add_email_template', 10, 5 );
+add_filter( 'pmpro_emails_custom_template_path', 'pmprore_add_email_template', 10, 5 );
 
 /*
 Function to add links to the plugin row meta
