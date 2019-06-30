@@ -82,15 +82,15 @@ function pmpror_recurring_emails() {
 		//look for memberships that are going to renew within a configurable amount of time (1 week by default), but we haven't emailed them yet about it.
 		$sqlQuery = $wpdb->prepare( "      
 			SELECT DISTINCT mo.user_id 
-			FROM wp_pmpro_membership_orders mo
-				LEFT JOIN wp_pmpro_memberships_users mu			-- to check for recurring
+			FROM $wpdb->pmpro_membership_orders mo
+				LEFT JOIN $wpdb->pmpro_memberships_users mu			-- to check for recurring
 					ON mu.user_id = mo.user_id
 					AND mu.membership_id = mo.membership_id
-				LEFT JOIN wp_usermeta um						-- to check if we've already emailed
+				LEFT JOIN $wpdb->usermeta um						-- to check if we've already emailed
 					ON um.user_id = mo.user_id
 					AND um.meta_key = '%s'
 			WHERE mo.timestamp = ( SELECT Max(mo2.timestamp)	-- make sure it's the latest order
-									FROM   wp_pmpro_membership_orders mo2
+									FROM   $wpdb->pmpro_membership_orders mo2
 									WHERE  mo2.user_id = mo.user_id
 									AND    status = 'success' )
 				AND mo.status = 'success'						-- only successful orders
