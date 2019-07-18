@@ -295,6 +295,11 @@ function pmpror_recurring_emails() {
  */
 function pmprore_add_to_templates( $templates ) {
 
+	// PMPro Email Templates may be active without PMPro active.
+	if ( ! function_exists( 'pmpro_loadTemplate' ) ) {
+		return $templates;
+	}
+
 	$re_emails = apply_filters( 'pmpro_upcoming_recurring_payment_reminder', array(
 		7 => 'membership_recurring'
 	) );
