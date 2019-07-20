@@ -28,7 +28,7 @@ function pmpror_init_test() {
 	if ( ! empty( $_REQUEST['pmpror_test'] ) && current_user_can( 'manage_options' ) ) {
 
 		// Do NOT send the email message(s)!
-		//add_filter( 'pmprorm_send_reminder_to_user', '__return_false' );
+		add_filter( 'pmprorm_send_reminder_to_user', '__return_false' );
 
 		// Process recurring email(s)
 		pmpror_recurring_emails();
