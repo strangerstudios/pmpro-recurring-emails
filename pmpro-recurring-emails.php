@@ -3,7 +3,7 @@
 Plugin Name: Paid Memberships Pro - Recurring Emails Add On
 Plugin URI: http://www.paidmembershipspro.com/wp/pmpro-recurring-emails/
 Description: Send email message(s) X days before a recurring payment is scheduled, to warn/remind members.
-Version: .5.3
+Version: .5.4
 Author: Stranger Studios, Thomas Sjolshagen <thomas@eighty20results.com>
 Author URI: http://www.strangerstudios.com
 */
@@ -35,6 +35,11 @@ function pmpror_init_test() {
 
 		// Reset send functionality
 		remove_filter( 'pmprorm_send_reminder_to_user', '__return_false' );
+		
+		echo '<p>';
+		esc_html_e( 'Finished test. Check your PHP error log for details.', 'pmpro-recurring-emails' );
+		echo '</p>';
+		
 		exit;
 	}
 }
