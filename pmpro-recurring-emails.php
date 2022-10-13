@@ -248,7 +248,9 @@ function pmpror_recurring_emails() {
 						$pmproemail->sendEmail();
 
 						//notify script
-						printf( __( "Membership renewing email sent to %s.<br />", "pmpro" ), $euser->user_email );
+						if ( WP_DEBUG ) {
+							error_log( sprintf( __( "Membership renewing email sent to %s.<br />", "pmpro" ), $euser->user_email ) );
+						}
 
 						//remember so we don't send twice
 						$sent_emails[] = $euser->ID;
@@ -261,7 +263,9 @@ function pmpror_recurring_emails() {
 
 				} else {
 					//shouldn't get here, but if no order found, just continue
-					printf( __( "Couldn't find the last order for %s.", "pmpro" ), $euser->user_email );
+					if ( WP_DEBUG ) {
+						error_log( sprintf( __( "Couldn't find the last order for %s.", "pmpro" ), $euser->user_email ) );
+					}
 				}
 			}
 
