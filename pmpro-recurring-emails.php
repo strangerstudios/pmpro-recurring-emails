@@ -173,7 +173,7 @@ function pmpror_recurring_emails() {
 				}
 				
 				//make sure we have the current membership level data
-				$euser->membership_level = pmpro_getMembershipLevelForUser( $euser->ID );
+				$membership_level = pmpro_getMembershipLevelForUser( $euser->ID );
 
 				//some standard fields
 				$pmproemail->email    = $euser->user_email;
@@ -184,11 +184,12 @@ function pmpror_recurring_emails() {
 					"name"                  => $euser->display_name,
 					"user_login"            => $euser->user_login,
 					"sitename"              => get_option( "blogname" ),
-					"membership_id"         => $euser->membership_level->id,
-					"membership_level_name" => $euser->membership_level->name,
+					"membership_id"         => $membership_level->id,
+					"membership_level_name" => $membership_level->name,
+					"membership_cost"       => pmpro_getLevelCost( $membership_level ),
 					"siteemail"             => pmpro_getOption( "from_email" ),
 					"login_link"            => wp_login_url(),
-					"enddate"               => date( get_option( 'date_format' ), $euser->membership_level->enddate ),
+					"enddate"               => date( get_option( 'date_format' ), $membership_level->enddate ),
 					"display_name"          => $euser->display_name,
 					"user_email"            => $euser->user_email,
 					"cancel_link"           => wp_login_url( pmpro_url( "cancel" ) )
