@@ -186,6 +186,7 @@ function pmpror_recurring_emails() {
 					"sitename"              => get_option( "blogname" ),
 					"membership_id"         => $euser->membership_level->id,
 					"membership_level_name" => $euser->membership_level->name,
+					"billing_amount"        => pmpro_formatPrice( $euser->membership_level->billing_amount ),
 					"siteemail"             => pmpro_getOption( "from_email" ),
 					"login_link"            => wp_login_url(),
 					"enddate"               => date( get_option( 'date_format' ), $euser->membership_level->enddate ),
