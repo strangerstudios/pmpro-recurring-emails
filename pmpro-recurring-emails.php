@@ -187,6 +187,7 @@ function pmpror_recurring_emails() {
 					"membership_id"         => $membership_level->id,
 					"membership_level_name" => $membership_level->name,
 					"membership_cost"       => pmpro_getLevelCost( $membership_level ),
+					"billing_amount"        => pmpro_formatPrice( $euser->membership_level->billing_amount ),
 					"siteemail"             => pmpro_getOption( "from_email" ),
 					"login_link"            => wp_login_url(),
 					"enddate"               => date( get_option( 'date_format' ), $membership_level->enddate ),
@@ -249,7 +250,9 @@ function pmpror_recurring_emails() {
 						$pmproemail->sendEmail();
 
 						//notify script
-						printf( __( "Membership renewing email sent to %s.<br />", "pmpro" ), $euser->user_email );
+						if ( WP_DEBUG ) {
+							error_log( sprintf( __( "Membership renewing email sent to %s.<br />", "pmpro" ), $euser->user_email ) );
+						}
 
 						//remember so we don't send twice
 						$sent_emails[] = $euser->ID;
@@ -262,7 +265,9 @@ function pmpror_recurring_emails() {
 
 				} else {
 					//shouldn't get here, but if no order found, just continue
-					printf( __( "Couldn't find the last order for %s.", "pmpro" ), $euser->user_email );
+					if ( WP_DEBUG ) {
+						error_log( sprintf( __( "Couldn't find the last order for %s.", "pmpro" ), $euser->user_email ) );
+					}
 				}
 			}
 
@@ -294,7 +299,7 @@ function pmpror_recurring_emails() {
 /**
  * Add message template to the Email templates add-on (if installed).
  *
- * @param $templates - The previously defined template aray
+ * @param $templates - The previously defined template array
  *
  * @return mixed - (possibly) updated template array
  *
