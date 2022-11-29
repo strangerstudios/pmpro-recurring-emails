@@ -294,7 +294,7 @@ function pmpror_recurring_emails() {
 /**
  * Add message template to the Email templates add-on (if installed).
  *
- * @param $templates - The previously defined template aray
+ * @param $templates - The previously defined template array
  *
  * @return mixed - (possibly) updated template array
  *
