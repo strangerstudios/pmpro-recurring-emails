@@ -177,7 +177,7 @@ function pmpror_recurring_emails() {
 
 				//some standard fields
 				$pmproemail->email    = $euser->user_email;
-				$pmproemail->subject  = sprintf( __( "Your membership at %s will renew soon", "pmpro" ), get_option( "blogname" ) );
+				$pmproemail->subject  = ! empty( pmpro_getOption( 'email_' . $template . '_subject' ) ) ? pmpro_getOption( 'email_' . $template . '_subject' ) : sprintf( __( "Your membership at %s will renew soon", "pmpro" ), get_option( "blogname" ) );
 				$pmproemail->template = $template;
 				$pmproemail->data     = array(
 					"subject"               => $pmproemail->subject,
@@ -233,8 +233,13 @@ function pmpror_recurring_emails() {
 						$pmproemail->data['billinginfo'] = "";
 					}
 
-					//set body
-					$pmproemail->body = pmpro_loadTemplate( $template, 'local', 'emails', 'html' );
+					//Get the body from the email template option first, or try to get the HTML instead.
+					if ( ! empty( pmpro_getOption( 'email_' . $template . '_body' ) ) ) {
+						$pmproemail->body = pmpro_getOption( 'email_' . $template . '_body' );
+					} else {
+						$pmproemail->body = pmpro_loadTemplate( $template, 'local', 'emails', 'html' );
+
+					}
 
 					/**
 					 * @filter      pmprorm_send_reminder_to_user
