@@ -187,7 +187,7 @@ function pmpror_recurring_emails() {
 					"membership_id"         => $membership_level->id,
 					"membership_level_name" => $membership_level->name,
 					"membership_cost"       => pmpro_getLevelCost( $membership_level ),
-					"billing_amount"        => pmpro_formatPrice( $euser->membership_level->billing_amount ),
+					"billing_amount"        => pmpro_formatPrice( $membership_level->billing_amount ),
 					"siteemail"             => pmpro_getOption( "from_email" ),
 					"login_link"            => wp_login_url(),
 					"enddate"               => date( get_option( 'date_format' ), $membership_level->enddate ),
