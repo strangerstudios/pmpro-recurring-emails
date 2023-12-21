@@ -10,17 +10,17 @@ Text Domain: pmpro-recurring-emails
 Domain Path: /languages
 */
 
-define( 'PMPRORE_DIR', plugin_dir_path( __FILE__ ) );
+define( 'PMPROR_DIR', plugin_dir_path( __FILE__ ) );
 
 /**
  * Load the languages folder for translations.
  *
  * @since 1.0
  */
-function pmprore_load_plugin_text_domain() {
+function pmpror_load_plugin_text_domain() {
 	load_plugin_textdomain( 'pmpro-recurring-emails', false, basename( dirname( __FILE__ ) ) . '/languages' );
 }
-add_action( 'plugins_loaded', 'pmprore_load_plugin_text_domain' );
+add_action( 'plugins_loaded', 'pmpror_load_plugin_text_domain' );
 
 /**
  * Manually trigger the process (test)
@@ -112,31 +112,31 @@ function pmpror_recurring_emails() {
 			date_i18n( 'Y-m-d', strtotime( "+{$days} days", current_time( 'timestamp' ) ) ),
 			$days
 		);
-		pmprore_log( 'SQL used to fetch upcoming renewal payments:' );
-		pmprore_log( $sqlQuery );
+		pmpror_log( 'SQL used to fetch upcoming renewal payments:' );
+		pmpror_log( $sqlQuery );
 
 		// Run the query.
 		$subscriptions_to_notify = $wpdb->get_results( $sqlQuery );
 
 		// Make sure that the query was successful.
 		if ( is_wp_error( $subscriptions_to_notify ) ) {
-			pmprore_log( 'Error fetching upcoming renewal payments: ' . $subscriptions_to_notify->print_error() );
+			pmpror_log( 'Error fetching upcoming renewal payments: ' . $subscriptions_to_notify->print_error() );
 			continue;
 		}
 
-		pmprore_log( 'Found ' . count( $subscriptions_to_notify ) . ' upcoming renewal payments.' );
+		pmpror_log( 'Found ' . count( $subscriptions_to_notify ) . ' upcoming renewal payments.' );
 
 		// Loop through each subscription and send reminder.
 		foreach ( $subscriptions_to_notify as $subscription_to_notify ) {
 			// Get the subscription object.
 			$subscription_obj = new PMPro_Subscription( $subscription_to_notify->id );
-			pmprore_log( 'Preparing to send reminder for subscription ID ' . $subscription_obj->get_id() . ' and user ID ' . $subscription_obj->get_user_id() );
+			pmpror_log( 'Preparing to send reminder for subscription ID ' . $subscription_obj->get_id() . ' and user ID ' . $subscription_obj->get_user_id() );
 
 			// Get the user.
 			$user = get_userdata( $subscription_obj->get_user_id() );
 			if ( empty( $user ) ) {
 				// No user. Let's log an error, update the metadata for the subscription and continue.
-				pmprore_log( 'No user found for subscription ID ' . $subscription_obj->get_id() . ' and user ID ' . $subscription_obj->get_user_id() );
+				pmpror_log( 'No user found for subscription ID ' . $subscription_obj->get_id() . ' and user ID ' . $subscription_obj->get_user_id() );
 				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_next_payment_date', $subscription_obj->get_next_payment_date( 'Y-m-d H:i:s', false ) );
 				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_days', $days );
 				continue;
@@ -176,21 +176,21 @@ function pmpror_recurring_emails() {
 					'billinginfo'           => '' // Deprecated.
 				);
 				$pmproemail->sendEmail();
-				pmprore_log( 'Sent reminder email to user ID ' . $subscription_obj->get_user_id() );
+				pmpror_log( 'Sent reminder email to user ID ' . $subscription_obj->get_user_id() );
 
 				// Update the subscription meta to prevent duplicate emails.
 				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_next_payment_date', $subscription_obj->get_next_payment_date( 'Y-m-d H:i:s', false ) );
 				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_days', $days );
 			} else {
 				// If we're not actually sending, log the email that we would have sent.
-				pmprore_log( sprintf( __( 'Membership renewing email was disabled for user ID %d.', "pmpro" ), $subscription_obj->get_user_id() ) );
+				pmpror_log( sprintf( __( 'Membership renewing email was disabled for user ID %d.', "pmpro" ), $subscription_obj->get_user_id() ) );
 			}
 		}
 
 		// Update the previous days value.
 		$previous_days = $days;
 	}
-	pmprore_output_log();
+	pmpror_output_log();
 }
 add_action( 'pmpro_cron_expiration_warnings', 'pmpror_recurring_emails', 30 );
 
@@ -264,23 +264,23 @@ function pmpror_recurring_emails_legacy( $emails ) {
 			$days,            				  // for Year w/date & interval
 			"{$today} 00:00:00"				  // for meta_value to lookup
 		);
-		pmprore_log( "SQL used to fetch user list:" );
-		pmprore_log( $sqlQuery );
+		pmpror_log( "SQL used to fetch user list:" );
+		pmpror_log( $sqlQuery );
 
 		$recurring_soon = $wpdb->get_results( $sqlQuery );
 
 		if ( is_wp_error( $recurring_soon ) ) {
-			pmprore_log( "Error while searching for users with upcoming recurring payments: " . $recurring_soon->print_error() );
+			pmpror_log( "Error while searching for users with upcoming recurring payments: " . $recurring_soon->print_error() );
 			continue;
 		}
 
-		pmprore_log( "Found {$wpdb->num_rows} records..." );
+		pmpror_log( "Found {$wpdb->num_rows} records..." );
 	
 		foreach ( $recurring_soon as $e ) {
 
 			if ( ! in_array( $e->user_id, $sent_emails ) ) {
 
-				pmprore_log( "Preparing email to send for {$e->user_id}" );
+				pmpror_log( "Preparing email to send for {$e->user_id}" );
 
 				//send an email
 				$pmproemail = new PMProEmail();
@@ -364,18 +364,18 @@ function pmpror_recurring_emails_legacy( $emails ) {
 						$pmproemail->sendEmail();
 
 						//notify script
-						pmprore_log( sprintf( __( "Membership renewing email sent to user ID %d.<br />", "pmpro-recurring-emails" ), $euser->ID ) );
+						pmpror_log( sprintf( __( "Membership renewing email sent to user ID %d.<br />", "pmpro-recurring-emails" ), $euser->ID ) );
 
 						//remember so we don't send twice
 						$sent_emails[] = $euser->ID;
 					} else {
-						pmprore_log( sprintf( __( "Membership renewing email was disabled for user ID %d.<br />", "pmpro-recurring-emails" ), $euser->ID ) );
+						pmpror_log( sprintf( __( "Membership renewing email was disabled for user ID %d.<br />", "pmpro-recurring-emails" ), $euser->ID ) );
 						$sent_emails[] = $euser->ID;
 					}
 
 				} else {
 					//shouldn't get here, but if no order found, just continue
-					pmprore_log( sprintf( __( "Couldn't find the last order for user id %d.", "pmpro-recurring-emails" ), $euser->ID ) );
+					pmpror_log( sprintf( __( "Couldn't find the last order for user id %d.", "pmpro-recurring-emails" ), $euser->ID ) );
 				}
 			}
 
@@ -390,14 +390,14 @@ function pmpror_recurring_emails_legacy( $emails ) {
 
 					);
 				} else {
-					pmprore_log( sprintf( "Would have updated metadata for %d: %s = %s ", $e->user_id, "pmpro_recurring_notice_{$d}", date( "Y-m-d 00:00:00", strtotime( "+" . ( intval( $d ) + 1 ) . " days", current_time( 'timestamp' ) ) ) ) );
+					pmpror_log( sprintf( "Would have updated metadata for %d: %s = %s ", $e->user_id, "pmpro_recurring_notice_{$d}", date( "Y-m-d 00:00:00", strtotime( "+" . ( intval( $d ) + 1 ) . " days", current_time( 'timestamp' ) ) ) ) );
 				}
 			} // foreach sent emails
 
-			pmprore_log( "Sent emails: " . print_r( $sent_emails, true ) );
+			pmpror_log( "Sent emails: " . print_r( $sent_emails, true ) );
 		} // foreach (users to process)
 	} // foreach (to-send email list)
-	pmprore_output_log();
+	pmpror_output_log();
 }
 
 /**
@@ -405,7 +405,7 @@ function pmpror_recurring_emails_legacy( $emails ) {
  *
  * @param array $templates that can be edited.
  */
-function pmprore_template_callback( $templates ) {
+function pmpror_template_callback( $templates ) {
 	ob_start();
 	?>
 	<p>Thank you for your membership to !!sitename!!.</p>
@@ -425,18 +425,18 @@ function pmprore_template_callback( $templates ) {
 	
 	return $templates;
 }
-add_filter( 'pmproet_templates', 'pmprore_template_callback');
+add_filter( 'pmproet_templates', 'pmpror_template_callback');
 
 /**
- * Add a log entry to the PMProRE log.
+ * Add a log entry to the PMPro Recurring Emails log.
  *
  * @since 1.0
  *
  * @param string $message The message to log.
  */
-function pmprore_log( $message ) {
-	global $pmprore_logstr;
-	$pmprore_logstr .= "\t" . $message . "\n";
+function pmpror_log( $message ) {
+	global $pmpror_logstr;
+	$pmpror_logstr .= "\t" . $message . "\n";
 }
 
 /**
@@ -445,22 +445,22 @@ function pmprore_log( $message ) {
  *
  * @since 1.0
  */
-function pmprore_output_log() {
-	global $pmprore_logstr;
+function pmpror_output_log() {
+	global $pmpror_logstr;
 
-	$pmprore_logstr = "Logged On: " . date_i18n("m/d/Y H:i:s") . "\n" . $pmprore_logstr . "\n-------------\n";
+	$pmpror_logstr = "Logged On: " . date_i18n("m/d/Y H:i:s") . "\n" . $pmpror_logstr . "\n-------------\n";
 
 	//log in file or email?
-	if ( defined( 'PMPRORE_DEBUG' ) && PMPRORE_DEBUG === 'log' ) {
+	if ( defined( 'PMPROR_DEBUG' ) && PMPROR_DEBUG === 'log' ) {
 		// Output to log file.
-		$logfile = apply_filters( 'pmprore_logfile', PMPRORE_DIR . '/logs/pmprore.txt' );
+		$logfile = apply_filters( 'pmpror_logfile', PMPROR_DIR . '/logs/pmpror.txt' );
 		$loghandle = fopen( $logfile, "a+" );
-		fwrite( $loghandle, $pmprore_logstr );
+		fwrite( $loghandle, $pmpror_logstr );
 		fclose( $loghandle );
-	} elseif ( defined( 'PMPRORE_DEBUG' ) && false !== PMPRORE_DEBUG ) {
+	} elseif ( defined( 'PMPROR_DEBUG' ) && false !== PMPROR_DEBUG ) {
 		// Send via email.
-		$log_email = strpos( PMPRORE_DEBUG, '@' ) ? PMPRORE_DEBUG : get_option( 'admin_email' );
-		wp_mail( $log_email, get_option( 'blogname' ) . ' PMPro Recurring Emails Debug Log', nl2br( esc_html( $pmprore_logstr ) ) );
+		$log_email = strpos( PMPROR_DEBUG, '@' ) ? PMPROR_DEBUG : get_option( 'admin_email' );
+		wp_mail( $log_email, get_option( 'blogname' ) . ' PMPro Recurring Emails Debug Log', nl2br( esc_html( $pmpror_logstr ) ) );
 	}
 }
 
