@@ -6,23 +6,19 @@ Description: Send email message(s) X days before a recurring payment is schedule
 Version: 0.5.5
 Author: Stranger Studios, Thomas Sjolshagen <thomas@eighty20results.com>
 Author URI: http://www.strangerstudios.com
+Text Domain: pmpro-recurring-emails
+Domain Path: /languages
 */
 
 define( 'PMPRORE_DIR', plugin_dir_path( __FILE__ ) );
 
-/*
-	We want to send a reminder to email to members N days before their membership renews.
-	
-	This plugin is meant to be used with recurring membership levels in PMPro. Normally
-	an email is sent when the recurring payment goes through. We want to send an extra
-	email N days before this.
-
-    The email template, # of messages & days before sending can be configured
-    w/the pmpro_upcoming_recurring_payment_reminder filter.
-*/
-
-//run our cron at the same time as the expiration warning emails
-add_action( "pmpro_cron_expiration_warnings", "pmpror_recurring_emails", 30 );
+/**
+ * Load the languages folder for translations.
+ */
+function pmprore_load_plugin_text_domain() {
+	load_plugin_textdomain( 'pmpro-recurring-emails', false, basename( dirname( __FILE__ ) ) . '/languages' );
+}
+add_action( 'plugins_loaded', 'pmprore_load_plugin_text_domain' );
 
 /**
  * Manually trigger the process (test)
@@ -40,7 +36,7 @@ function pmpror_init_test() {
 		remove_filter( 'pmprorm_send_reminder_to_user', '__return_false' );
 		
 		echo '<p>';
-		esc_html_e( 'Finished test. Check your PHP error log for details.', 'pmpro-recurring-emails' );
+		esc_html_e( 'Finished test.', 'pmpro-recurring-emails' );
 		echo '</p>';
 		
 		exit;
@@ -197,6 +193,7 @@ function pmpror_recurring_emails() {
 	}
 	pmprore_output_log();
 }
+add_action( 'pmpro_cron_expiration_warnings', 'pmpror_recurring_emails', 30 );
 
 /**
  * Legacy support for PMPro < 3.0.
@@ -300,7 +297,7 @@ function pmpror_recurring_emails_legacy( $emails ) {
 
 				//some standard fields
 				$pmproemail->email    = $euser->user_email;
-				$pmproemail->subject  = sprintf( __( "Your membership at %s will renew soon", "pmpro" ), get_option( "blogname" ) );
+				$pmproemail->subject  = sprintf( __( "Your membership at %s will renew soon", "pmpro-recurring-emails" ), get_option( "blogname" ) );
 				$pmproemail->template = $template;
 				$pmproemail->data     = array(
 					"subject"               => $pmproemail->subject,
@@ -372,18 +369,18 @@ function pmpror_recurring_emails_legacy( $emails ) {
 						$pmproemail->sendEmail();
 
 						//notify script
-						pmprore_log( sprintf( __( "Membership renewing email sent to user ID %d.<br />", "pmpro" ), $euser->ID ) );
+						pmprore_log( sprintf( __( "Membership renewing email sent to user ID %d.<br />", "pmpro-recurring-emails" ), $euser->ID ) );
 
 						//remember so we don't send twice
 						$sent_emails[] = $euser->ID;
 					} else {
-						pmprore_log( sprintf( __( "Membership renewing email was disabled for user ID %d.<br />", "pmpro" ), $euser->ID ) );
+						pmprore_log( sprintf( __( "Membership renewing email was disabled for user ID %d.<br />", "pmpro-recurring-emails" ), $euser->ID ) );
 						$sent_emails[] = $euser->ID;
 					}
 
 				} else {
 					//shouldn't get here, but if no order found, just continue
-					pmprore_log( sprintf( __( "Couldn't find the last order for user id %d.", "pmpro" ), $euser->ID ) );
+					pmprore_log( sprintf( __( "Couldn't find the last order for user id %d.", "pmpro-recurring-emails" ), $euser->ID ) );
 				}
 			}
 
