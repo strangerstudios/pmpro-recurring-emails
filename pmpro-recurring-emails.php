@@ -56,16 +56,13 @@ add_action( 'init', 'pmpror_init_test' );
 function pmpror_recurring_emails() {
 	global $wpdb;
 
-	//clean up errors in the memberships_users table that could cause problems
-	if( function_exists( 'pmpro_cleanup_memberships_users_table' ) ) {
+	// Clean up errors in the memberships_users table that could cause problems.
+	if ( function_exists( 'pmpro_cleanup_memberships_users_table' ) ) {
 		pmpro_cleanup_memberships_users_table();
 	}
 
-	//get todays date for later calculations
-	$today = date_i18n( "Y-m-d", current_time( "timestamp" ) );
-	
 	/**
-	 *  Filter will set how many days before you want to send, and the template to use
+	 * Filter will set how many days before you want to send, and the template to use
 	 *
 	 * @filter  pmpro_upcoming_recurring_payment_reminder
 	 *
@@ -73,9 +70,162 @@ function pmpror_recurring_emails() {
 	 *                                  value = name of template to use w/o extension (membership_recurring.html)
 	 */
 	$emails = apply_filters( 'pmpro_upcoming_recurring_payment_reminder', array(
-		7 => 'membership_recurring'
+		7 => 'membership_recurring',
 	) );
 	ksort( $emails, SORT_NUMERIC );
+
+	// Make sure we have the subscriptions table.
+	if ( ! class_exists( 'PMPro_Subscription' ) ) {
+		// Legacy support for PMPro < 3.0.
+		pmpror_recurring_emails_legacy( $emails );
+		return;
+	}
+
+	// Loop through each reminder and send reminders, keeping track of the previous $days value.
+	$previous_days = 0;
+	foreach ( $emails as $days => $template ) {
+		// Get all subscriptions that will renew between $previous_days and $days.
+		// Also need to check that we haven't already sent this reminder by checking subscription meta.
+		// Can't actually use the PMPro_Subscriptions class here, because it doesn't support searching by next payment date
+		$sqlQuery = $wpdb->prepare(
+			"SELECT subscription.*
+			FROM {$wpdb->pmpro_subscriptions} subscription
+			LEFT JOIN {$wpdb->pmpro_subscriptionmeta} last_next_payment_date 
+				ON subscription.id = last_next_payment_date.pmpro_subscription_id
+				AND last_next_payment_date.meta_key = 'pmprorm_last_next_payment_date'
+			LEFT JOIN {$wpdb->pmpro_subscriptionmeta} last_days
+				ON subscription.id = last_days.pmpro_subscription_id
+				AND last_days.meta_key = 'pmprorm_last_days'
+			WHERE subscription.status = 'active'
+			AND subscription.next_payment_date >= %s
+			AND subscription.next_payment_date < %s
+			AND ( last_next_payment_date.meta_value IS NULL
+				OR last_next_payment_date.meta_value != subscription.next_payment_date
+				OR last_days.meta_value > %d
+			)",
+			date_i18n( 'Y-m-d', strtotime( "+{$previous_days} days", current_time( 'timestamp' ) ) ),
+			date_i18n( 'Y-m-d', strtotime( "+{$days} days", current_time( 'timestamp' ) ) ),
+			$days
+		);
+
+		// If testing, log the query.
+		if ( WP_DEBUG ) {
+			error_log( 'SQL used to fetch upcoming renewal payments:' );
+			error_log( $sqlQuery );
+		}
+
+		// Run the query.
+		$subscriptions_to_notify = $wpdb->get_results( $sqlQuery );
+
+		// Make sure that the query was successful.
+		if ( is_wp_error( $subscriptions_to_notify ) ) {
+			if ( WP_DEBUG ) {
+				error_log( 'Error fetching upcoming renewal payments: ' . $subscriptions_to_notify->print_error() );
+			}
+			return;
+		}
+
+		// If testing, log the number of records found.
+		if ( WP_DEBUG ) {
+			error_log( 'Found ' . count( $subscriptions_to_notify ) . ' upcoming renewal payments.' );
+		}
+
+		// Loop through each subscription and send reminder.
+		foreach ( $subscriptions_to_notify as $subscription_to_notify ) {
+			$subscription_obj = new PMPro_Subscription( $subscription_to_notify->id );
+			// If  testing, log that we are preparing to send a reminder for this subscription ID and user ID.
+			if ( WP_DEBUG ) {
+				error_log( 'Preparing to send reminder for subscription ID ' . $subscription_obj->get_id() . ' and user ID ' . $subscription_obj->get_user_id() );
+			}
+
+			// Send an email.
+			$pmproemail = new PMProEmail();
+			$user       = get_userdata( $subscription_obj->get_user_id() );
+			
+			// Make sure we have a user.
+			if ( empty( $user ) ) {
+				// No user. Let's log an error, update the metadata for the subscription and continue.
+				if ( WP_DEBUG ) {
+					error_log( 'No user found for subscription ID ' . $subscription_obj->get_id() . ' and user ID ' . $subscription_obj->get_user_id() );
+				}
+				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_next_payment_date', $subscription_obj->get_next_payment_date( 'Y-m-d H:i:s', false ) );
+				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_days', $days );
+				continue;
+			}
+			
+			// Make sure we have the current membership level data if the user has the level.
+			$membership_level = pmpro_getLevel( $subscription_obj->get_membership_level_id() );
+
+			//some standard fields
+			$pmproemail->email    = $user->user_email;
+			$pmproemail->subject  = sprintf( __( 'Your membership at %s will renew soon', 'pmpro-recurring-emails' ), get_option( 'blogname' ) );
+			$pmproemail->template = $template;
+			$pmproemail->data     = array(
+				'subject'               => $pmproemail->subject,
+				'name'                  => $user->display_name,
+				'user_login'            => $user->user_login,
+				'sitename'              => get_option( 'blogname' ),
+				'membership_id'         => $subscription_obj->get_membership_level_id(),
+				'membership_level_name' => empty( $membership_level ) ? sprintf( __( '[Deleted level #%d]', 'pmpro-recurring-emails' ), $subscription_obj->get_membership_level_id() ) : $membership_level->name,
+				'membership_cost'       => $subscription_obj->get_cost_text(),
+				'billing_amount'        => pmpro_formatPrice( $subscription_obj->get_billing_amount() ),
+				'renewaldate'           => date_i18n( get_option( 'date_format' ), $subscription_obj->get_next_payment_date() ),
+				'siteemail'             => get_option( "pmpro_from_email" ),
+				'login_link'            => wp_login_url(),
+				'display_name'          => $user->display_name,
+				'user_email'            => $user->user_email,
+				'cancel_link'           => wp_login_url( pmpro_url( 'cancel' ) ),
+				'billinginfo'           => '' // Deprecated.
+			);
+
+			//set body
+			$pmproemail->body = pmpro_loadTemplate( $template, 'local', 'emails', 'html' );
+
+			/**
+			 * @filter      pmprorm_send_reminder_to_user
+			 *
+			 * @param       boolean $send_mail - Whether to send mail or not (true by default)
+			 * @param       WP_User $user - User object being processed
+			 * @param       MembershipOrder $lastorder - Deprecated. Now passing null.
+			 */
+			$send_emails = apply_filters( 'pmprorm_send_reminder_to_user', true, $user, null );
+			if ( true === $send_emails ) {
+				//send the email
+				$pmproemail->sendEmail();
+
+				// Update the subscription meta to prevent duplicate emails.
+				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_next_payment_date', $subscription_obj->get_next_payment_date( 'Y-m-d H:i:s', false ) );
+				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_days', $days );
+
+				// If testing, log that we sent the email.
+				if ( WP_DEBUG ) {
+					error_log( 'Sent reminder email to user ID ' . $subscription_obj->get_user_id() );
+				}
+			} else {
+				// If testing, log the email that we would have sent.
+				if ( WP_DEBUG ) {
+					error_log( 'Would have sent the following email to user ID ' . $subscription_obj->get_user_id() . ': ' . print_r( $pmproemail, true ) );
+				}
+			}
+		}
+
+		// Update the previous days value.
+		$previous_days = $days;
+	}
+}
+
+/**
+ * Legacy support for PMPro < 3.0.
+ *
+ * @since TBD
+ *
+ * @param array $emails Array of emails to be sent from pmpro_upcoming_recurring_payment_reminder filter.
+ */
+function pmpror_recurring_emails_legacy( $emails ) {
+	global $wpdb;
+
+	//get todays date for later calculations
+	$today = date_i18n( "Y-m-d", current_time( "timestamp" ) );
 
 	//array to store ids of folks we sent emails to so we don't email them twice
 	$sent_emails = array();
@@ -190,7 +340,6 @@ function pmpror_recurring_emails() {
 					"billing_amount"        => pmpro_formatPrice( $membership_level->billing_amount ),
 					"siteemail"             => get_option( "pmpro_from_email" ),
 					"login_link"            => wp_login_url(),
-					"enddate"               => date( get_option( 'date_format' ), $membership_level->enddate ),
 					"display_name"          => $euser->display_name,
 					"user_email"            => $euser->user_email,
 					"cancel_link"           => wp_login_url( pmpro_url( "cancel" ) )
