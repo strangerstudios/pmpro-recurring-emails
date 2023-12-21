@@ -151,45 +151,6 @@ function pmpror_recurring_emails() {
 				update_pmpro_subscription_meta( $subscription_to_notify->id, 'pmprorm_last_days', $days );
 				continue;
 			}
-
-			// For sites that just upgraded to 3.0, we want to try to pull information from their old meta keys.
-			$recurring_notice_meta = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->usermeta} WHERE user_id = %d AND meta_key LIKE %s", $user->ID, 'pmpro_recurring_notice_%' ) );
-			if ( ! empty( $recurring_notice_meta ) ) {
-				// Each meta key is in the format pmpro_recurring_notice_{$days}, and each meta value is {date of last reminder sent} + {$days}.
-				// This means that if the meta  value is greater than our sub's next payment date, we've already sent a reminder for the subscription's next payment date.
-				// To translate this into our new format, we need to know:
-				//     1. Whether we have already sent any reminders for the current subscription next payment date (ie old meta value > new next payment date).
-				//     2. If so, the minimum $old_days value that fits this criteria.
-				$lowest_days_sent = null;
-				foreach ( $recurring_notice_meta as $meta ) {
-					// If the old meta value is greater than the new next payment date, we've already sent a reminder for the subscription's next payment date.
-					if ( $meta->meta_value > $subscription_to_notify->next_payment_date ) {
-						// Get the $days value from the old meta key.
-						$old_days = str_replace( 'pmpro_recurring_notice_', '', $meta->meta_key );
-						if ( is_null( $lowest_days_sent ) || $old_days < $lowest_days_sent ) {
-							$lowest_days_sent = $old_days;
-						}
-					}
-
-					// Delete the old user meta.
-					delete_user_meta( $user->ID, $meta->meta_key );
-				}
-
-				// If $lowest_days is less than or equal to $days, we've already sent this reminder. Set the subscription meta and continue.
-				if ( null  !== $lowest_days_sent && $lowest_days_sent <= $days ) {
-					update_pmpro_subscription_meta( $subscription_to_notify->id, 'pmprorm_last_next_payment_date', $subscription_to_notify->next_payment_date );
-					update_pmpro_subscription_meta( $subscription_to_notify->id, 'pmprorm_last_days', $lowest_days_sent );
-
-					// If testing, log that we are skipping this reminder.
-					if ( WP_DEBUG ) {
-						error_log( 'Skipping reminder for subscription ID ' . $subscription_to_notify->id . ' and user ID ' . $subscription_to_notify->user_id . ' because it has already been sent before 3.0 migration.' );
-					}
-
-					continue;
-				}
-
-				// Otherwise, continue sending reminder.
-			}
 			
 			// Make sure we have the current membership level data if the user has the level.
 			$membership_level = pmpro_getSpecificMembershipLevelForUser( $user->ID, $subscription_to_notify->membership_level_id );
