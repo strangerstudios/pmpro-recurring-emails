@@ -207,6 +207,9 @@ function pmpror_recurring_emails() {
 				}
 			}
 		}
+
+		// Update the previous days value.
+		$previous_days = $days;
 	}
 }
 
