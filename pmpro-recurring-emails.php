@@ -14,6 +14,8 @@ define( 'PMPRORE_DIR', plugin_dir_path( __FILE__ ) );
 
 /**
  * Load the languages folder for translations.
+ *
+ * @since 1.0
  */
 function pmprore_load_plugin_text_domain() {
 	load_plugin_textdomain( 'pmpro-recurring-emails', false, basename( dirname( __FILE__ ) ) . '/languages' );
@@ -22,6 +24,8 @@ add_action( 'plugins_loaded', 'pmprore_load_plugin_text_domain' );
 
 /**
  * Manually trigger the process (test)
+ *
+ * @since 1.0
  */
 function pmpror_init_test() {
 	if ( ! empty( $_REQUEST['pmpror_test'] ) && current_user_can( 'manage_options' ) ) {
@@ -51,6 +55,8 @@ add_action( 'init', 'pmpror_init_test' );
  * template name (value) (<template_name>.html) to use when sending reminder.
  *
  * Use pmprorm_send_reminder_to_user filter to disable sending notice to all/any individual user(s)
+ *
+ * @since 1.0
  */
 function pmpror_recurring_emails() {
 	global $wpdb;
@@ -61,7 +67,7 @@ function pmpror_recurring_emails() {
 	}
 
 	/**
-	 * Filter will set how many days before you want to send, and the template to use
+	 * Filter will set how many days before you want to send, and the template to use.
 	 *
 	 * @filter  pmpro_upcoming_recurring_payment_reminder
 	 *
@@ -408,6 +414,8 @@ function pmpror_recurring_emails_legacy( $emails ) {
 /**
  * Add message template to the Email templates add-on (if installed).
  *
+ * @since 1.0
+ *
  * @param $templates - The previously defined template array
  *
  * @return mixed - (possibly) updated template array
@@ -441,7 +449,9 @@ function pmprore_add_to_templates( $templates ) {
 add_filter( 'pmproet_templates', 'pmprore_add_to_templates', 10, 1 );
 
 /**
- * Filter hook for the included upcoming payment warning message
+ * Filter hook for the included upcoming payment warning message.
+ *
+ * @since 1.0
  *
  * @param array $templates
  * @param string $page_name
@@ -497,9 +507,11 @@ function pmprore_output_log() {
 	}
 }
 
-/*
-Function to add links to the plugin row meta
-*/
+/**
+ * Function to add links to the plugin row meta.
+ *
+ * @since 1.0
+ */
 function pmpro_recurring_emails_plugin_row_meta( $links, $file ) {
 	if ( strpos( $file, 'pmpro-recurring-emails.php' ) !== false ) {
 		$new_links = array(
