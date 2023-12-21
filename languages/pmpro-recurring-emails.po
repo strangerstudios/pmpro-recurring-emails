@@ -1,0 +1,63 @@
+# Copyright (C) 2023 Stranger Studios, Thomas Sjolshagen <thomas@eighty20results.com>
+# This file is distributed under the same license as the Paid Memberships Pro - Recurring Emails Add On plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Paid Memberships Pro - Recurring Emails Add On 1.0\n"
+"Report-Msgid-Bugs-To: info@paidmembershipspro.com\n"
+"Last-Translator: Paid Memberships Pro <info@paidmembershipspro.com>\n"
+"Language-Team: Paid Memberships Pro <info@paidmembershipspro.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2023-12-21T20:27:41+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.9.0\n"
+"X-Domain: pmpro-recurring-emails\n"
+
+#. Plugin Name of the plugin
+msgid "Paid Memberships Pro - Recurring Emails Add On"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "http://www.paidmembershipspro.com/wp/pmpro-recurring-emails/"
+msgstr ""
+
+#. Description of the plugin
+msgid "Send email message(s) X days before a recurring payment is scheduled, to warn/remind members."
+msgstr ""
+
+#. Author of the plugin
+msgid "Stranger Studios, Thomas Sjolshagen <thomas@eighty20results.com>"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "http://www.strangerstudios.com"
+msgstr ""
+
+#: pmpro-recurring-emails.php:43
+msgid "Finished test."
+msgstr ""
+
+#: pmpro-recurring-emails.php:167
+msgid "[Deleted level #%d]"
+msgstr ""
+
+#: pmpro-recurring-emails.php:367
+msgid "Membership renewing email sent to user ID %d.<br />"
+msgstr ""
+
+#: pmpro-recurring-emails.php:372
+msgid "Membership renewing email was disabled for user ID %d.<br />"
+msgstr ""
+
+#: pmpro-recurring-emails.php:378
+msgid "Couldn't find the last order for user id %d."
+msgstr ""
+
+#: pmpro-recurring-emails.php:420
+msgid "Your membership at %s will renew soon"
+msgstr ""
+
+#: pmpro-recurring-emails.php:421
+msgid "Membership Recurring"
+msgstr ""
