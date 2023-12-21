@@ -1,15 +1,15 @@
 === Paid Memberships Pro - Recurring Emails Add On ===
 Contributors: strangerstudios
 Tags: pmpro, paid memberships pro, files, uploads, downloads, secure, protect, lock
-Requires at least: 4
-Tested up to: 6.1
-Stable tag: 0.5.5
+Requires at least: 5.2
+Tested up to: 6.4
+Stable tag: 1.0
 
-Sends out an email 7 days before a recurring payment is made to remind members.
+Sends out an email X days before a recurring payment is made to remind members.
 
 == Description ==
 
-Sends out an email 7 days before a recurring payment is made to remind members.
+Sends out an email X days before a recurring payment is made to remind members.
 
 == Installation ==
 
@@ -27,6 +27,14 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Please visit our premium support site at http://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 1.0 - 2023-12-22 =
+* ENHANCEMENT: For sites running PMPro 3.0+, this plugin now uses the Subscriptions table to more accurately determine when to send emails and to add compatibility with Multiple Memberships Per User. #28 (@dparker1005)
+* ENHANCEMENT: Added a new constant `PMPROR_DEBUG` to allow setting an email address to send log data to or to have the log data printed to a file. #34 (@dparker1005)
+* ENHANCEMENT: Added localization support. #35 (@dparker1005)
+* BUG FIX: Fixed issue where customized email template data may not be sent. #36 (@andrewlimaza, @dparker1005)
+* BUG FIX: Fixed issue where the `!!billing_amount!!` email template variable would sometimes incorrectly return $0 instead of the actual billing amount. #29 (@MaximilianoRicoTabo)
+* REFACTOR: Now using `get_option()` instead of `pmpro_getOption()`. #31 (@dwanjuki)
+
 = 0.5.5 - 2022-11-29 =
 * ENHANCEMENT: Added !!billing_amount!! and !!membership_cost!! as variables for this email.
 * BUG FIX: Now using sprintf to error log instead of printf. This fixes an issue in certain PHP versions that was causing fatal errors resulting in multiple emails going out to the same users.
