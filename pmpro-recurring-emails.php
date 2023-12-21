@@ -128,14 +128,12 @@ function pmpror_recurring_emails() {
 
 		// Loop through each subscription and send reminder.
 		foreach ( $subscriptions_to_notify as $subscription_to_notify ) {
+			// Get the subscription object.
 			$subscription_obj = new PMPro_Subscription( $subscription_to_notify->id );
 			pmprore_log( 'Preparing to send reminder for subscription ID ' . $subscription_obj->get_id() . ' and user ID ' . $subscription_obj->get_user_id() );
 
-			// Send an email.
-			$pmproemail = new PMProEmail();
-			$user       = get_userdata( $subscription_obj->get_user_id() );
-			
-			// Make sure we have a user.
+			// Get the user.
+			$user = get_userdata( $subscription_obj->get_user_id() );
 			if ( empty( $user ) ) {
 				// No user. Let's log an error, update the metadata for the subscription and continue.
 				pmprore_log( 'No user found for subscription ID ' . $subscription_obj->get_id() . ' and user ID ' . $subscription_obj->get_user_id() );
@@ -143,34 +141,6 @@ function pmpror_recurring_emails() {
 				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_days', $days );
 				continue;
 			}
-			
-			// Make sure we have the current membership level data if the user has the level.
-			$membership_level = pmpro_getLevel( $subscription_obj->get_membership_level_id() );
-
-			//some standard fields
-			$pmproemail->email    = $user->user_email;
-			$pmproemail->subject  = sprintf( __( 'Your membership at %s will renew soon', 'pmpro-recurring-emails' ), get_option( 'blogname' ) );
-			$pmproemail->template = $template;
-			$pmproemail->data     = array(
-				'subject'               => $pmproemail->subject,
-				'name'                  => $user->display_name,
-				'user_login'            => $user->user_login,
-				'sitename'              => get_option( 'blogname' ),
-				'membership_id'         => $subscription_obj->get_membership_level_id(),
-				'membership_level_name' => empty( $membership_level ) ? sprintf( __( '[Deleted level #%d]', 'pmpro-recurring-emails' ), $subscription_obj->get_membership_level_id() ) : $membership_level->name,
-				'membership_cost'       => $subscription_obj->get_cost_text(),
-				'billing_amount'        => pmpro_formatPrice( $subscription_obj->get_billing_amount() ),
-				'renewaldate'           => date_i18n( get_option( 'date_format' ), $subscription_obj->get_next_payment_date() ),
-				'siteemail'             => get_option( "pmpro_from_email" ),
-				'login_link'            => wp_login_url(),
-				'display_name'          => $user->display_name,
-				'user_email'            => $user->user_email,
-				'cancel_link'           => wp_login_url( pmpro_url( 'cancel' ) ),
-				'billinginfo'           => '' // Deprecated.
-			);
-
-			//set body
-			$pmproemail->body = pmpro_loadTemplate( $template, 'local', 'emails', 'html' );
 
 			/**
 			 * @filter      pmprorm_send_reminder_to_user
@@ -181,7 +151,30 @@ function pmpror_recurring_emails() {
 			 */
 			$send_emails = apply_filters( 'pmprorm_send_reminder_to_user', true, $user, null );
 			if ( true === $send_emails ) {
-				//send the email
+				// Get the level info.
+				$membership_level = pmpro_getLevel( $subscription_obj->get_membership_level_id() );
+
+				// Send the email.
+				$pmproemail = new PMProEmail();
+				$pmproemail->email    = $user->user_email;
+				$pmproemail->template = $template;
+				$pmproemail->data     = array(
+					'subject'               => $pmproemail->subject,
+					'name'                  => $user->display_name,
+					'user_login'            => $user->user_login,
+					'sitename'              => get_option( 'blogname' ),
+					'membership_id'         => $subscription_obj->get_membership_level_id(),
+					'membership_level_name' => empty( $membership_level ) ? sprintf( __( '[Deleted level #%d]', 'pmpro-recurring-emails' ), $subscription_obj->get_membership_level_id() ) : $membership_level->name,
+					'membership_cost'       => $subscription_obj->get_cost_text(),
+					'billing_amount'        => pmpro_formatPrice( $subscription_obj->get_billing_amount() ),
+					'renewaldate'           => date_i18n( get_option( 'date_format' ), $subscription_obj->get_next_payment_date() ),
+					'siteemail'             => get_option( "pmpro_from_email" ),
+					'login_link'            => wp_login_url(),
+					'display_name'          => $user->display_name,
+					'user_email'            => $user->user_email,
+					'cancel_link'           => wp_login_url( pmpro_url( 'cancel' ) ),
+					'billinginfo'           => '' // Deprecated.
+				);
 				$pmproemail->sendEmail();
 				pmprore_log( 'Sent reminder email to user ID ' . $subscription_obj->get_user_id() );
 
@@ -303,7 +296,6 @@ function pmpror_recurring_emails_legacy( $emails ) {
 
 				//some standard fields
 				$pmproemail->email    = $euser->user_email;
-				$pmproemail->subject  = sprintf( __( "Your membership at %s will renew soon", "pmpro-recurring-emails" ), get_option( "blogname" ) );
 				$pmproemail->template = $template;
 				$pmproemail->data     = array(
 					"subject"               => $pmproemail->subject,
@@ -358,9 +350,6 @@ function pmpror_recurring_emails_legacy( $emails ) {
 						$pmproemail->data['billinginfo'] = "";
 					}
 
-					//set body
-					$pmproemail->body = pmpro_loadTemplate( $template, 'local', 'emails', 'html' );
-
 					/**
 					 * @filter      pmprorm_send_reminder_to_user
 					 *
@@ -412,63 +401,31 @@ function pmpror_recurring_emails_legacy( $emails ) {
 }
 
 /**
- * Add message template to the Email templates add-on (if installed).
+ * Add the Recurring Email template to email templates.
  *
- * @since 1.0
- *
- * @param $templates - The previously defined template array
- *
- * @return mixed - (possibly) updated template array
- *
+ * @param array $templates that can be edited.
  */
-function pmprore_add_to_templates( $templates ) {
+function pmprore_template_callback( $templates ) {
+	ob_start();
+	?>
+	<p>Thank you for your membership to !!sitename!!.</p>
 
-	// PMPro Email Templates may be active without PMPro active.
-	if ( ! function_exists( 'pmpro_loadTemplate' ) ) {
-		return $templates;
-	}
+	<p>This is just a reminder that your !!membership_level_name!! membership will automatically renew on !!renewaldate!!.</p>
 
-	$re_emails = apply_filters( 'pmpro_upcoming_recurring_payment_reminder', array(
-		7 => 'membership_recurring'
-	) );
+	<p>Account: !!display_name!! (!!user_email!!)</p>
 
-	$site = get_option( 'blogname' );
-
-	foreach ( $re_emails as $days => $templ ) {
-		$body = pmpro_loadTemplate( $templ, 'local', 'emails', 'html' );
-		$templates["{$templ}"] = array(
-			'subject'     => __( "Happening soon: The recurring payment for your membership at {$site}", "pmprore" ),
-			'description' => __( "Membership level recurring payment message for {$site}", "pmprore" ),
-			'body'        => $body,
-		);
-	}
-
+	<p>If for some reason you do not want to renew your membership you can cancel by clicking here: !!cancel_link!!</p>
+	<?php
+	$templates['membership_recurring'] = array(
+		'subject' => esc_html( sprintf( __( 'Your membership at %s will renew soon', 'pmpro-recurring-emails' ), get_option( 'blogname' ) ) ),
+		'description' => esc_html__( 'Membership Recurring', 'pmpro-recurring-emails' ),
+		'body' => ob_get_clean(),
+		'help_text' => __( 'This email is sent when a subscription is approaching its renewal date. The additional placeholders !!renewaldate!! and !!billing_amount!! can be used to print the date that the subscription will renew and the renewal price.', 'pmpro-gift-levels' )
+	);
+	
 	return $templates;
 }
-
-add_filter( 'pmproet_templates', 'pmprore_add_to_templates', 10, 1 );
-
-/**
- * Filter hook for the included upcoming payment warning message.
- *
- * @since 1.0
- *
- * @param array $templates
- * @param string $page_name
- * @param string $type
- * @param string $where
- * @param string $ext
- *
- * @return array        -- Path to the plugin specific template file
- */
-function pmprore_add_email_template( $templates, $page_name, $type = 'emails', $where = 'local', $ext = 'html' ) {
-
-	$templates[] = plugin_dir_path( __FILE__ ) . "emails/membership_recurring.html";
-
-	return $templates;
-}
-
-add_filter( 'pmpro_emails_custom_template_path', 'pmprore_add_email_template', 10, 5 );
+add_filter( 'pmproet_templates', 'pmprore_template_callback');
 
 /**
  * Add a log entry to the PMProRE log.
