@@ -56,13 +56,6 @@ add_action( 'init', 'pmpror_init_test' );
 function pmpror_recurring_emails() {
 	global $wpdb;
 
-	// Make sure we have the subscriptions table.
-	if ( ! class_exists( 'PMPro_Subscription' ) ) {
-		// Legacy support for PMPro < 3.0.
-		pmpror_recurring_emails_legacy();
-		return;
-	}
-
 	// Clean up errors in the memberships_users table that could cause problems.
 	if ( function_exists( 'pmpro_cleanup_memberships_users_table' ) ) {
 		pmpro_cleanup_memberships_users_table();
@@ -80,6 +73,13 @@ function pmpror_recurring_emails() {
 		7 => 'membership_recurring',
 	) );
 	ksort( $emails, SORT_NUMERIC );
+
+	// Make sure we have the subscriptions table.
+	if ( ! class_exists( 'PMPro_Subscription' ) ) {
+		// Legacy support for PMPro < 3.0.
+		pmpror_recurring_emails_legacy( $emails );
+		return;
+	}
 
 	// Loop through each reminder and send reminders, keeping track of the previous $days value.
 	$previous_days = 0;
@@ -271,30 +271,16 @@ function pmpror_recurring_emails() {
 
 /**
  * Legacy support for PMPro < 3.0.
+ *
+ * @since TBD
+ *
+ * @param array $emails Array of emails to be sent from pmpro_upcoming_recurring_payment_reminder filter.
  */
-function pmpror_recurring_emails_legacy() {
+function pmpror_recurring_emails_legacy( $emails ) {
 	global $wpdb;
-
-	//clean up errors in the memberships_users table that could cause problems
-	if( function_exists( 'pmpro_cleanup_memberships_users_table' ) ) {
-		pmpro_cleanup_memberships_users_table();
-	}
 
 	//get todays date for later calculations
 	$today = date_i18n( "Y-m-d", current_time( "timestamp" ) );
-	
-	/**
-	 *  Filter will set how many days before you want to send, and the template to use
-	 *
-	 * @filter  pmpro_upcoming_recurring_payment_reminder
-	 *
-	 * @param   array $reminders key = # of days before payment will be charged (7 => 'membership_recurring')
-	 *                                  value = name of template to use w/o extension (membership_recurring.html)
-	 */
-	$emails = apply_filters( 'pmpro_upcoming_recurring_payment_reminder', array(
-		7 => 'membership_recurring'
-	) );
-	ksort( $emails, SORT_NUMERIC );
 
 	//array to store ids of folks we sent emails to so we don't email them twice
 	$sent_emails = array();
