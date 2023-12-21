@@ -227,7 +227,7 @@ function pmpror_recurring_emails() {
 				'membership_cost'       => $cost_text,
 				'billing_amount'        => pmpro_formatPrice( $billing_amount ),
 				'renewaldate'          => date_i18n( get_option( 'date_format' ), strtotime( $subscription_to_notify->next_payment_date ) ),
-				'siteemail'             => pmpro_getOption( 'from_email' ),
+				'siteemail'             => get_option( "pmpro_from_email" ),
 				'login_link'            => wp_login_url(),
 				'enddate'               => date( get_option( 'date_format' ), $membership_level->enddate ),
 				'display_name'          => $user->display_name,
