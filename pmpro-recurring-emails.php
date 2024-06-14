@@ -137,7 +137,7 @@ function pmpror_recurring_emails() {
 			if ( empty( $user ) ) {
 				// No user. Let's log an error, update the metadata for the subscription and continue.
 				pmpror_log( 'No user found for subscription ID ' . $subscription_obj->get_id() . ' and user ID ' . $subscription_obj->get_user_id() );
-				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_next_payment_date', $subscription_obj->get_next_payment_date( 'Y-m-d H:i:s', false ) );
+				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_next_payment_date', $subscription_to_notify->next_payment_date );
 				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_days', $days );
 				continue;
 			}
@@ -179,7 +179,7 @@ function pmpror_recurring_emails() {
 				pmpror_log( 'Sent reminder email to user ID ' . $subscription_obj->get_user_id() );
 
 				// Update the subscription meta to prevent duplicate emails.
-				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_next_payment_date', $subscription_obj->get_next_payment_date( 'Y-m-d H:i:s', false ) );
+				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_next_payment_date', $subscription_to_notify->next_payment_date );
 				update_pmpro_subscription_meta( $subscription_obj->get_id(), 'pmprorm_last_days', $days );
 			} else {
 				// If we're not actually sending, log the email that we would have sent.
