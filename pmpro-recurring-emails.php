@@ -1,11 +1,11 @@
 <?php
 /*
-Plugin Name: Paid Memberships Pro - Recurring Emails Add On
-Plugin URI: http://www.paidmembershipspro.com/wp/pmpro-recurring-emails/
-Description: Send email message(s) X days before a recurring payment is scheduled, to warn/remind members.
+Plugin Name: Paid Memberships Pro - Recurring Emails
+Plugin URI: https://www.paidmembershipspro.com/add-ons/recurring-payment-email-reminders/
+Description: Send members a reminder email prior to when their next recurring subscription payment is made to let them know payment is processing soon.
 Version: 1.0
-Author: Stranger Studios, Thomas Sjolshagen <thomas@eighty20results.com>
-Author URI: http://www.strangerstudios.com
+Author: Paid Memberships Pro
+Author URI: https://www.paidmembershipspro.com
 Text Domain: pmpro-recurring-emails
 Domain Path: /languages
 */
@@ -472,7 +472,8 @@ function pmpror_output_log() {
 function pmpro_recurring_emails_plugin_row_meta( $links, $file ) {
 	if ( strpos( $file, 'pmpro-recurring-emails.php' ) !== false ) {
 		$new_links = array(
-			'<a href="' . esc_url( 'http://paidmembershipspro.com/support/' ) . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro' ) ) . '">' . __( 'Support', 'pmpro' ) . '</a>',
+			'<a href="' . esc_url('https://www.paidmembershipspro.com/add-ons/recurring-payment-email-reminders/')  . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-recurring-emails' ) ) . '">' . __( 'Docs', 'pmpro-recurring-emails' ) . '</a>',
+			'<a href="' . esc_url('https://www.paidmembershipspro.com/support/') . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-recurring-emails' ) ) . '">' . __( 'Support', 'pmpro-recurring-emails' ) . '</a>',
 		);
 		$links     = array_merge( $links, $new_links );
 	}
